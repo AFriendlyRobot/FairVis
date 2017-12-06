@@ -1,0 +1,12 @@
+{% load static %}
+
+<link rel="stylesheet" type="text/css" href="{% static 'fairvis/style.css' %}" />
+
+<form id="upload-form" action="{% url 'fairvis:upload' %}" method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="datafile" />
+    <input type="submit" name="submit" value="Upload" />
+</form>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<script src="{% static 'fairvis/script.js' %}"></script>
