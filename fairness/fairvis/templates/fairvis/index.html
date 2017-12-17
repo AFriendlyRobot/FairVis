@@ -4,8 +4,16 @@
 
 <form id="upload-form" action="{% url 'fairvis:upload' %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <input type="file" name="datafile" />
-    <input type="submit" name="submit" value="Upload" />
+    <label for="namefile">Column Names</label>
+    <input type="file" name="namefile" id="namefile" />
+    <br />
+    <label for="datafile">Data CSV</label>
+    <input type="file" name="datafile" id="datafile" />
+    <br />
+    <label for="predictfile">Predictions</label>
+    <input type="file" name="precictfile" id="predictfile" />
+    <br />
+    <input type="submit" name="submit" value="Upload" id="dataSubmit" disabled="true" />
 </form>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
