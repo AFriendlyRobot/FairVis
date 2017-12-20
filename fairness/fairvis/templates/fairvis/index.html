@@ -1,31 +1,63 @@
 {% load static %}
 
-<link rel="stylesheet" type="text/css" href="{% static 'fairvis/style.css' %}" />
+<!-- Latest compiled and minified CSS -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
-<form id="upload-form" action="{% url 'fairvis:upload' %}" method="post" enctype="multipart/form-data" class="form-group">
+<!-- Optional theme -->
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+
+<link rel="stylesheet" href="{% static 'fairvis/style.css' %}" />
+
+
+<title>Fairness Visualization</title>
+
+<h1 id="main-header" class="centered">Understanding Fairness in Data and ML</h1>
+
+
+<form id="upload-form" action="{% url 'fairvis:upload' %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <label for="namefile">Column Names</label>
-    <input type="file" name="namefile" id="namefile" />
-    <br />
-    <label for="datafile">Data CSV</label>
-    <input type="file" name="datafile" id="datafile" />
-    <br />
-    <label for="predictfile">Predictions</label>
-    <input type="file" name="precictfile" id="predictfile" />
-    <br />
-    <input type="checkbox" id="classification" name="classification" />
-    <label for="classification">Discrete target values (classes)</label>
-    <br />
-    <input type="submit" name="submit" value="Upload" id="dataSubmit" disabled="true" />
+    <div class="form-group">
+        <label for="namefile">Column Names</label>
+        <input type="file" name="namefile" id="namefile" class="form-control" />
+    </div>
+    <div class="form-group">
+        <label for="datafile">Data CSV</label>
+        <input type="file" name="datafile" id="datafile" class="form-control" />
+    </div>
+    <div class="form-group">
+        <div class="input-group input-file" name="predictfileUpload">
+            <label for="predictfile">Predictions</label>
+            <input type="file" name="precictfile" id="predictfile" class="form-control" />
+        </div>
+    </div>
+    <div class="form-group">
+        <input type="checkbox" id="classification" name="classification" />
+        <label for="classification">Discrete target values (classes)</label>
+    </div>
+    <input type="submit" name="submit" value="Upload" id="dataSubmit" disabled="true" class="btn btn-primary"/>
 </form>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-<script type="text/javascript" src="{% static 'fairvis/script.js' %}"></script>
-<!-- <script src=""></script> -->
-<!-- importing d3 -->
-<script src="https://d3js.org/d3.v4.min.js"></script>
 
-<div>
+<!-- Ref: https://codepen.io/Sebus059/pen/MwMQbP?editors=1010 -->
+<!-- <div class="form-group">
+    <div class="input-group input-file" name="Fichier1">
+        <span class="input-group-btn">
+            <button class="btn btn-default btn-choose" type="button">Choose</button>
+        </span>
+        <input type="text" class="form-control" placeholder='Choose a file...' />
+        <span class="input-group-btn">
+             <button class="btn btn-warning btn-reset" type="button">Reset</button>
+        </span>
+    </div>
+</div> -->
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+<!-- Latest compiled and minified JavaScript -->
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="https://d3js.org/d3.v4.min.js"></script>
+<script type="text/javascript" src="{% static 'fairvis/script.js' %}"></script>
+
+<div id="sample-visualization" class="inactive">
     <svg width="960" height="500"></svg>
     <!-- importing viz js -->
     <script type="text/javascript" src="{% static 'fairvis/viz_0.js' %}"></script>

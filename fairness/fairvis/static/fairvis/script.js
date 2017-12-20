@@ -52,7 +52,6 @@ $(document).ready(function() {
 		e.preventDefault();
 
 		if (namefileSelected && datafileSelected) {
-			console.log(fd);
 			$.ajax({
 				type: 'POST',
 				url: $(this).attr('action'),
@@ -63,12 +62,12 @@ $(document).ready(function() {
 				beforeSend: function() {
 					console.log("sending");
 				},
-				success: function(msg) {
-					console.log(msg);
-				}
-			})
+				success: parseData,
+			});
+
+			clearForm();
 		} else {
-			alert("Please upload at least a name file and data file");
+			alert("Please select at least a name file and data file");
 		}
 	});
 
@@ -110,7 +109,23 @@ function enableFormSubmit() {
 	$("#dataSubmit").attr('disabled', false);
 }
 
+function disableFormSubmit() {
+	$("#dataSubmit").attr('disabled', true);
+}
 
+function clearForm() {
+	$("#namefile").val("");
+	$("#datafile").val("");
+	$("#predictfile").val("");
+	disableFormSubmit();
+}
+
+
+function parseData(obj) {
+	console.log(obj);
+	$("#upload-form").addClass("inactive");
+	$("#sample-visualization").removeClass("inactive");
+}
 
 
 

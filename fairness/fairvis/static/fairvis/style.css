@@ -1,4 +1,23 @@
-/* body {
-    background-color: green;
-} */
+/*body {
+	background-color: green;
+}*/ 
+
+.centered {
+	text-align: center;
+}
+
+.inactive {
+	visibility: hidden;
+	display: none;
+}
+
+#upload-form {
+	width: 80vw;
+	margin: auto;
+}
+
+#main-header {
+	margin-bottom: 20px;
+}
+
 
