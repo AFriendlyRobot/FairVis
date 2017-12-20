@@ -52,6 +52,7 @@ $(document).ready(function() {
 		e.preventDefault();
 
 		if (namefileSelected && datafileSelected) {
+			console.log(fd);
 			$.ajax({
 				type: 'POST',
 				url: $(this).attr('action'),

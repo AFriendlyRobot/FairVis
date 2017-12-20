@@ -4,7 +4,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.template import loader
 
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, LogisticRegression
 
 # Create your views here.
 
@@ -30,11 +30,17 @@ def upload(request):
         names = parse_file(nfile)
         dfile = request.FILES['datafile']
         data = parse_file(dfile)
-        # TODO(tfs): Not yet handling their internal prediction file (conditionally)
+
         response_data = {}
         response_data['nameFile'] = names
         response_data['dataFile'] = data
-        response_data['linregPredictions'] = linear_prediction(parse_file(dfile)).tolist()
+
+        # If "classification" checked
+        if 'classification' in request.POST:
+            response_data['logregPredictions'] = class_prediction(parse_file(dfile)).tolist()
+        else:
+            response_data['linregPredictions']  = linear_prediction(parse_file(dfile)).tolist()
+
         return JsonResponse(response_data)
     else:
         return HttpResponse("Nope")
@@ -70,22 +76,33 @@ def linear_prediction(data):
     train_outcomes = []
     predict_data   = []
 
-
     for line in data:
         if line[-1] is not "NA":
-            print(line)
             train_data.append([float(e) for e in line[:-1]])
             train_outcomes.append(float(line[-1]))
         predict_data.append([float(e) for e in line[:-1]])
 
-
-    print(train_data)
-    print(train_outcomes)
-    print(predict_data)
-
     linreg = LinearRegression()
-    fit = linreg.fit(train_data, train_outcomes)
+    linreg.fit(train_data, train_outcomes)
     predictions = linreg.predict(predict_data)
+
+    return predictions
+
+
+def class_prediction(data):
+    train_data    = []
+    train_classes = []
+    predict_data  = []
+
+    for line in data:
+        if line[-1] is not "NA":
+            train_data.append([float(e) for e in line[:-1]])
+            train_classes.append(float(line[-1]))
+        predict_data.append([float(e) for e in line[:-1]])
+
+    logreg = LogisticRegression()
+    logreg.fit(train_data, train_classes)
+    predictions = logreg.predict(predict_data)
 
     return predictions
 
