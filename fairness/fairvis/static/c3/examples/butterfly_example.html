@@ -1,0 +1,80 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Butterfly Flow Chart</title>
+    <meta charset="utf-8" name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+
+    <!-- Dependencies -->
+    <script src="lib/d3.js"></script>
+
+    <!-- C3 -->
+    <link rel="stylesheet" href="../css/c3.css" />
+    <script src="../js/c3.js"></script>
+    <script src="../js/c3-graph.js"></script>
+
+    <style>
+        .c3.chart, h1 {
+            font-family: sans-serif;
+        }
+
+        form {
+            margin-bottom: 1em;
+        }
+
+        .c3.sankey .link.backedge path {
+            stroke: red !important;
+        }
+
+        .c3.sankey .link path:hover {
+            stroke: gold !important;
+        }
+    </style>
+</head>
+
+<body>
+    <p>
+        Some flow charts can represent graphs that are very complex with many interconnected nodes.
+        To help better comprehend these graphs it can help to focus on just part of the flow at a time.
+        With the <i>Butterfly</i> flow graph you can <b>click on a node</b> to focus on the flow that
+        goes through that node.  Because it starts with a single node in the center, and fans out
+        left and right with multiple source and target nodes, it is called a "butterfly".
+        Click in the chart outside of any node to revert to viewing the entire graph.
+    </p>
+    <p>
+        This example visualizes the aggregated execution flow of a program.  It is not a timeline.
+        The nodes represent functions and the links represent function calls.
+        The size of the link is weighted based on the <i>total time</i> of the function call.
+        A node will be larger then the links leaving it when the function has <i>self time</i>.
+        This is similar to a <b>caller/callee</b> type visualization, except it can represent an
+        arbitrary depth from the focus node, not just the immediate callers and callees.
+    </p>
+    <p>
+        <b>Note: </b><i>
+            Butterfly graphs are still under initial development.
+            e.g. Gradients don't work well yet with IE.
+        </i>
+    </p>
+
+    <form>
+        <label>
+            Data set:
+            <select id="dataset">
+                <option value="libpthread" selected>libpthread</option>
+                <option value="schedule">scedule</option>
+                <option value="launchthreads">launchthreads</option>
+            </select>
+        </label>
+        <br />
+        <label>
+            Depth of Field
+            <input id="depth_of_field" type="range" min=1 max=5 value=2 />
+        </label>
+    </form>
+
+    <div id="cfg_butterfly"></div>
+
+
+    <script src="butterfly_example.js"></script>
+</body>
+</html>

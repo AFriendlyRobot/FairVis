@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>C3</title>
+    <meta charset="utf-8" />
+    <meta name="description" content="Configurable Chart Collection" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+
+    <link rel="stylesheet" href="css/doc.css" />
+
+    <style>
+        li a b {
+            font-size: larger;
+        }
+        header img {
+            float: left;
+            margin: 0.15em 0.5em 0 0;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>
+            <img src="img/c3.jpg" height=64 width=64 />
+            Configurable Chart Collection<br />
+            <small>Visualization Library</small>
+        </h1>
+    </header>
+
+    <nav>
+        <ul>
+            <li><a href="examples/">Examples</a></li>
+            <li><a href="api.html">API Overview</a></li>
+            <li><a href="doc/">API Reference</a></li>
+        </ul>
+    </nav>
+
+    <main>
+        <section>
+            <p>
+                C3 is a JavaScript library for data visualization in HTML5 built using <a href="http://d3js.org">D3</a>.
+                Source is available on <a href="https://github.com/drarmstr/c3">GitHub</a>.
+            </p>
+            <h2>Notable visualizations include:</h2>
+            <ul>
+                <li><a href="examples/#plot_zoom"><b>Line / Area Graphs</b></a></li>
+                <li><a href="examples/#stack"><b>Bar Charts</b></a></li>
+                <li><a href="examples/#stack"><b>Stacked Graphs</b></a></li>
+                <li><a href="examples/#pie"><b>Pie / Donut Charts</b></a></li>
+                <li><a href="examples/#scatterplot"><b>Scatter Plots</b></a></li>
+                <li><a href="examples/#swimlanes"><b>Swimlanes</b></a></li>
+                <li><a href="examples/#flamechart_sunburst"><b>Flame Chart Timeline</b></a></li>
+                <li><a href="examples/#flamechart_sunburst"><b>Sunburst</b></a></li>
+                <li><a href="examples/#sankey"><b>Sankey Flow Graph</b></a></li>
+                <li><a href="examples/#butterfly"><b>Butterfly (caller/callee) Flow Graph</b></a></li>
+                <li><a href="examples/#legend"><b>Legends</b></a></li>
+                <li><a href="examples/#table_searchable"><b>Data Tables</b></a></li>
+            </ul>
+            <h2>Notable features include:</h2>
+            <ul>
+                <li><a href="api.html">Declarative style API.</a></li>
+                <li>
+                    <a href="api.html#datasets">
+                        Flexibility with dataset organization.  Use your own structures and describe their shape via accessor functions.
+                    </a>
+                </li>
+                <li>
+                    <a href="api.html#layers">
+                        Layering mechanism for composability of different data in the same chart.
+                    </a>
+                </li>
+                <li>
+                    <a href="api.html#selection_options">
+                        Compatible with animation for linked and dynamic datasets.
+                    </a>
+                </li>
+                <li>
+                    <a href="api.html#styling">
+                        Lots of styling options by exposing CSS directly.
+                    </a>
+                </li>
+                <li>
+                    <a href="api.html#events">
+                        Extensible for custom user interaction by exposing DOM events.
+                    </a>
+                </li>
+                <li>
+                    <a href="api.html#extensibility">
+                        Extensible with custom functionality.
+                    </a>
+                </li>
+                <li>Some visualizations contain built-in support for dealing with large datasets.</li>
+                <li>
+                    Compatible with <a href="http://crossfilter.github.io/crossfilter/">Crossfilter</a>
+                    (<a href="examples/#worldbank">example</a>)
+                </li>
+            </ul>
+            <h2>Overview</h2>
+            <p>
+                So why another JavaScript visualization library?
+                Charts can always be made with a template engine, by directly manipulating the DOM
+                with the raw <a href="https://www.w3.org/DOM/">W3C DOM JavaScript API</a>, or by using a
+                library such as <a href="http://jquery.com">JQuery</a>.
+                But, we don't want to have to re-invent the wheel every time.
+                The <a href="http://d3js.org">D3</a> (Data-Driven Documents) library is a powerful
+                framework for DOM manipulation.  However, it is really best thought of as a
+                toolbox, as it does not contain any built-in charts per-se.  You can use it to help create
+                all sorts of custom visualizations, but there is a steep learning curve and lots of
+                repitition required to recreate common charts.
+                At a higher-level, there are a plethra of JavaScript visualization libraries availble
+                with a wide range of built-in charts you can grab and start using off the shelf.
+                For various projects I've tried to use them and generally ran into problems such as them
+                requiring the data to be laid out in a certain way, or missing functionality I needed
+                without a good way to extend them.  Out of this frustration, C3 was born.
+            </p>
+            <p>
+                C3 is a collection of data visualizations leveraging the D3 toolbox.
+                It provides these charts with a simple declarative API to easily get started.
+                However, it does not bury the implementation in an abstraction layer that loses
+                the major benefits of D3.
+                Data sets can generally be provided as an array of objects, but no restriction is made on
+                the format of the object.  Accessor functions can be defined to describe the shape and how
+                to get what the chart needs from the data set, or to provide arbitrary logic to get the data
+                from other locations.
+                C3 relies on and exposes the raw CSS styles and DOM events to allow a lot of flexibility in
+                styling and interactive behaviour.  Because it exposes raw styles and events it does
+                not restrict the styling or events that your browser supports.  As new styles or events
+                are offered by browser vendors they are automatically supported.
+                If that's not enough, C3 also provides a mechanism for extending charts with
+                new functionality if the built-in features are insufficient.
+            </p>
+            <p>
+                Check out the <a href="examples/">examples</a> as a tutorial of how to create some simple visualizations.
+                Or, jump to the <a href="examples/?#worldbank">World Bank</a> example for a more complex
+                scenario with multiple linked charts for a relational data set that can be dynamically
+                filtered across multiple dimensions.  There is also an <a href="api.html">API overview</a>
+                and <a href="doc">API reference</a>.
+            </p>
+            <p>
+                Note that these documentation pages are bundeled with the source repository.
+                Therefore, they are intentially kept simple barebones documentation and examples without
+                pulling in too many additional dependencies to look pretty.
+            </p>
+        </section>
+
+        <section>
+            <h1>Usage</h1>
+            <p>
+                To use C3, simply include <code>d3.js</code>, <code>c3.js</code>, and <code>c3.css</code>:
+                <blockquote><pre>
+&lt;script src="d3.js"&gt;&lt;/script&gt;
+&lt;script src="c3.js"&gt;&lt;/script&gt;
+&lt;link rel="stylesheet" href="c3.css"&gt;
+</pre></blockquote>
+                And then include any desired C3 visualizations.  For example:
+                <blockquote><pre>
+&lt;script src="c3-table.js"&gt;&lt;/script&gt;
+&lt;script src="c3-plot.js"&gt;&lt;/script&gt;
+&lt;script src="c3-layers.js"&gt;&lt;/script&gt;
+&lt;script src="c3-legend.js"&gt;&lt;/script&gt;
+&lt;script src="c3-polar.js"&gt;&lt;/script&gt;
+&lt;script src="c3-graph.js"&gt;&lt;/script&gt;
+</pre></blockquote>
+            </p>
+            <p>
+                Please see the <a href="examples/">Examples</a> and <a href="api.html">API Documentation</a> for more details.
+            </p>
+            <h3>NPM Package <code>q3</code></h3>
+            Alternatively, C3 is now available as an <a href="https://www.npmjs.com/">NPM</a> package.
+            Unfortunately, betweeen the time when this project started and when it was approved
+            for open source, the NPM package name <code>c3</code> was taken by another project.
+            Therefore, the package is currently published under
+            <a href="https://www.npmjs.com/package/q3"><code><b>q3</b></code></a>
+            while pending renaming consideration.  In your <code>package.json</code>
+            you can include it via:<blockquote><pre>
+    "dependencies": {
+        "q3": "^0.1.4"
+    }
+</pre></blockquote>
+            An initial main entry point has been included so you can require the package.
+            For example, if you are using a browser or transpiled language which supports ES6 modules,
+            you can use:<blockquote><pre>
+import d3 from 'd3';
+import c3 from 'q3';
+require('q3/css/c3.css');
+</pre></blockquote>
+            <h3>Dependencies</h3>
+            <p>
+                <a href="http://d3js.org">D3</a> is the only hard dependency for C3.
+                Many thanks to Mike Bostok for creating this wonderful toolbox.
+                Be sure to include the D3 script before including the C3 script.
+            </p>
+            <p>
+                For additional performance, the <a href="http://square.github.io/crossfilter/">Crossfilter</a>
+                library can also be included before C3 to improve some sorting operations.
+            </p>
+            <h3>TypeScript</h3>
+            <p>
+                C3 is also bundeled with a TypeScript definitions file <code>c3.d.ts</code> for those who
+                would like to use <a href="http://www.typescriptlang.org">TypeScript</a>.
+            </p>
+            <p>
+                Type definitions are not currently published for <a href="https://flowtype.org/">Flow</a>.
+                Please let me know if there is interest.
+            </p>
+        </section>
+
+        <section>
+            <h1>Examples</h1>
+            <ul>
+                <li><a href="examples"><b>Examples</b></a></li>
+            </ul>
+            <p>
+                Examples of various C3 charts and tables.
+                They are useful to demonstrate or test functionality or as a learning tutorial.
+                The examples start simple to cover each visualization type and build for a more complex tutorial.
+            </p>
+        </section>
+
+        <section>
+            <h1>Documentation</h1>
+            <ul>
+                <li><a href="api.html"><b>API Overview</b></a></li>
+                <li>
+                    <a href="doc/index.html"><b>API Reference</b></a> -
+                    In the reference, the <i>Variables Summary</i> sections list the set of options
+                    that can be specified for each visaulization or layer type via the constructor or render
+                    options object parameter.
+                </li>
+            </ul>
+        </section>
+
+        <section id="compatibility">
+            <h1>Compatibility</h1>
+            <p>
+                C3 has been tested with Chrome, IE, and Firefox.
+                However, not all browsers fully support all features and so there may
+                be some styling and placement differences.
+                Performance is definitely best with Chrome.
+            </p>
+            <p>
+                Notably, IE does not support canvas swimlanes embedded in an SVG chart,
+                vector scaling for zoomable line charts, and
+                placement of labels in the center of scatter plot circles.
+            </p>
+            <p>
+                Also, please note that by default some IT departments set a policy which defaults IE to an old
+                "compatibility" mode for internal sites where most things don't work.  Either each user has to disable
+                this compatibility mode or you can add the following in your html header to request to disable
+                compatibility mode:
+                <blockquote><code>&lt;meta http-equiv="X-UA-Compatible" content="IE=edge" /&gt;</code></blockquote>
+            </p>
+        </section>
+
+        <section>
+            <h1>License</h1>
+            <p>
+                The Configurable Chart Collection has been released under the <a href="LICENSE">BSD 3-Clause</a> open source license.
+            </p>
+        </section>
+    </main>
+
+    <script>
+        (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+        (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+        m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+        })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-43632406-4', 'auto');
+        ga('require', 'linkid');
+        ga('send', 'pageview');
+    </script>
+</body>
+</html>

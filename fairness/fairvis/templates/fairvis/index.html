@@ -54,13 +54,52 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
 <!-- Latest compiled and minified JavaScript -->
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-<script src="https://d3js.org/d3.v4.min.js"></script>
 <script type="text/javascript" src="{% static 'fairvis/script.js' %}"></script>
 
-<div id="sample-visualization" class="inactive">
+<!-- D3 library -->
+<script src="{% static 'd3/d3.js' %}"></script>
+
+<!-- C3 library -->
+<link rel="stylesheet" href="{% static 'c3/css/c3.css' %}" />
+<script type="text/javascript" src="{% static 'c3/js/c3.js' %}"></script>
+<script type="text/javascript" src="{% static 'c3/js/c3-plot.js' %}"></script>
+<script type="text/javascript" src="{% static 'c3/js/c3-layers.js' %}"></script>
+
+<!-- Chart Styles -->
+<style>
+    .c3.plot {
+        font-family: sans-serif;
+    }
+
+    .c3.plot .layer.average-grade {
+        stroke: purple;
+    }
+
+    .c3.plot .layer.scatter circle.failing {
+        stroke: red;
+    }
+
+    .info-box {
+        padding: 0.5em;
+        border-radius: 0.25em;
+        background-color: black;
+        color: white;
+        font-family: sans-serif;
+    }
+
+    .c3.axis .tick line {
+        stroke: darkgray;
+    }
+    .c3.axis line.grid {
+        stroke-dasharray: 2,2;
+    }
+</style>
+
+
+<div id="viz_scatterplot" class="inactive">
     <svg width="960" height="500"></svg>
     <!-- importing viz js -->
-    <script type="text/javascript" src="{% static 'fairvis/viz_0.js' %}"></script>
+    <script type="text/javascript" src="{% static 'fairvis/viz_scatterplot.js' %}"></script>
 </div>
 
 <div id="dataView"></div>

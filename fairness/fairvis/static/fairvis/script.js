@@ -44,6 +44,7 @@ var data;
 var namefileSelected = false;
 var datafileSelected = false;
 var predictfileSelected = false;
+var json; 
 
 $(document).ready(function() {
 	data = {};
@@ -123,6 +124,7 @@ function clearForm() {
 
 function parseData(obj) {
 	console.log(obj);
+	json = obj;
 	$("#upload-form").addClass("inactive");
 	$("#sample-visualization").removeClass("inactive");
 }
