@@ -506,7 +506,7 @@ class c3.Axis extends c3.Chart
         if @scale
             @axis
                 .scale @scale
-                .outerTickSize @path_size
+                .outterTickSize @path_size
                 .innerTickSize if @ticks then @tick_size else 0
                 .tickValues @tick_values
                 .tickFormat if not @ticks then "" else switch @tick_label

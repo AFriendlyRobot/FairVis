@@ -65,7 +65,6 @@ $(document).ready(function() {
 				},
 				success: parseData,
 			});
-
 			clearForm();
 		} else {
 			alert("Please select at least a name file and data file");
@@ -127,6 +126,10 @@ function parseData(obj) {
 	json = obj;
 	$("#upload-form").addClass("inactive");
 	$("#sample-visualization").removeClass("inactive");
+
+	// draw viz after parsing csv into json
+	setup();
+	draw_plot();
 }
 
 

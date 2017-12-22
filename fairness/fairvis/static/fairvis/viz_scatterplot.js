@@ -1,84 +1,124 @@
-// Scatter plot 
-// create the scatter plot and attach to the DOM 
+// draw scatter plot
 
-var dataPoints = JSON.parse(json);
+
+
+
 var paramIndex = 1;
+var predictionIndex = 5;
+var colorIndex = 2;  
+var data;
+var margin, width, height;
+var xValue, xScale, xMap, xAxis, yValue, yScale, yMap, yAxis; 
+var cValue, color; 
+var svg, tooltip;
 
-var scatter_plot = new c3.Plot({
-	anchor: '#scatter_plot',
-	height: 300, 
-	width:'50%', 
-	// TODO: change the scales to actual scale  
-	h: d3.scale.linear().domain([0, 1000]), 
-	v: d3.scale.linear().domain([0, 1000]), 
-	// margin and disable cropping 
-	margins: 10, 
-	crop_margins: false, 
 
-	// add axes and labels
-	axes : [
-		new c3.Axis.X({
-			grid: true, 
-			label: "param"
-		}), 
+function setup() {
+	data = json;
 
-		new c3.Axis.Y({
-			grid: true, 
-			label: "score", 
-			// tick_values: []
-			// option: create a quantize scale to translate numeric to groups/buckets 
-			/*
-			tick_label: d3.scale.quantize()
-				.domain([0, 1000])
-				.range(['high', 'med', 'low'])
-			*/ 
-		}),
-	]
+	margin = { top: 20, right: 20, left: 40, bottom: 30 };
+	width = 960 - margin.left - margin.right;
+	height = 500 - margin.top - margin.bottom;  
 
-	// set up the plot
-	
-	layers: [
-		new c3.Plot.Layer.Scatter({
-			// bind with a param
-			data: json,
-			// TODO: change index
-			x: function (index) { return dataFile[index][paramIndex]; }
-			y: function (index) { return linregPredictions[index]; }
-			// set radius of all dots to be 10 
-			r: 10, 
-			// TODO? filter:
-			point_options: {
-				animate: true, 
-				duration: 1000
-			}, 
-			// labels
-			label_options: {
-				text: function (index) { return x(index); }, 
-				styles: {
-					// TODO: set different color for different groups 
-					// 'fill': function (student) {}, 
-					'font-size': "x-small"
-				}
-			}, 
-			circle_options: {
-				// TODO: set different classes/styles for different groups
-				classes: {
+	xValue = function (d) { return d[paramIndex]; };
+	xScale = d3.scale.linear().range([0, width]);
+	xMap = function (d) { return xScale(xValue(d)); };
+	xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 
-				}. 
+	yValue = function (d) { return d[predictionIndex]; };
+	yScale = d3.scale.linear().range([height, 0]);
+	yMap = function (d) { return yScale(yValue(d)); };
+	yAxis = d3.svg.axis().scale(yScale).orient("left");
 
-				styles: {
+	// set up fill color 
+	// TODO: change the color for datapoint display (cicrles)
+	cValue = function (d) { return 0; }; //data.dataFile[index][colorIndex]; }, 
+	color = d3.scale.category10(); 
 
-				}, 
+	// add the graph canvas to the body of html 
+	svg = d3.select("body").append("svg")
+		.attr("width", width + margin.left + margin.right)
+		.attr("height", height + margin.top + margin.bottom)
+		.append("g")
+		.attr("transform", "translate(" + margin.left + "," + margin.top + ")"); 
 
-				// add events to 1) expand the circle size when hovered over 
-				// 2) display info for that data point
-				events: {
-					// TODO 
-				}
-			}
+	// add tooltip feature 
+	tooltip = d3.select("body").append("div")
+		.attr("class", "tooltip")
+		.style("opacity", 0); 
 
-		})
-	]
-	
-	
-});
+	xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
+	yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+}
+
+
+function draw_plot() {
+	// x axis
+	svg.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + height + ")")
+		.call(xAxis)
+		.append("text")
+		.attr("class", "label")
+		.attr("x", width)
+		.attr("y", -6)
+		.style("text-anchor", "end")
+		.text("chosen param");
+
+	// y axis
+	svg.append("g")
+		.attr("class", "y axis")
+		.call(yAxis)
+		.append("text")
+		.attr("class", "label")
+		.attr("transform", "rotate(-90)")
+		.attr("y", 6)
+		.attr("dy", ".71em")
+		.style("text-anchor", "end")
+		.text("prediction score"); 
+
+	svg.selectAll(".dot")
+		.data(data.dataFile)
+		.enter().append("circle")
+		.attr("class", "dot")
+		.attr("r", 3.5) 
+		.attr("cx", xMap)
+		.attr("cy", yMap)
+		.style("fill", function(d) { return color(cValue(d)); })
+		.on("mouseover", function(d) {
+			tooltip.transition() 
+				.duration(200)
+				.style("opacity", .9); 
+			tooltip.html(data.nameFile[d] + "<br/> ("+ xValue(d) + ", " + yValue(d) + ")")
+				.style("left", (d3.event.pageX + 5) + "px")
+				.style("top", (d3.event.pageY - 28) + "px"); 
+		}) 
+		.on("mouseout", function(d) {
+			tooltip.transition()
+				.duration(500)
+				.style("opacity", 0);
+		}); 
+
+  // draw legend
+  var legend = svg.selectAll(".legend")
+	  .data(color.domain())
+	  .enter().append("g")
+	  .attr("class", "legend")
+	  .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+
+  // draw legend colored rectangles
+  legend.append("rect")
+	  .attr("x", width - 18)
+	  .attr("width", 18)
+	  .attr("height", 18)
+	  .style("fill", color);
+
+  // draw legend text
+  legend.append("text")
+	  .attr("x", width - 24)
+	  .attr("y", 9)
+	  .attr("dy", ".35em")
+	  .style("text-anchor", "end")
+	  .text(function(d) { return d;})
+
+}

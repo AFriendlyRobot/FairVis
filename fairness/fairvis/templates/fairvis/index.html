@@ -1,5 +1,6 @@
 {% load static %}
 
+<html>
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
@@ -7,7 +8,31 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
 <link rel="stylesheet" href="{% static 'fairvis/style.css' %}" />
+<!-- <link rel="stylesheet" href="{% static 'fairvis/plot.css' %}" /> -->
 
+<style>
+    body {
+      font: 11px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+      fill: none;
+      stroke: #000;
+      shape-rendering: crispEdges;
+    }
+
+    .dot {
+      stroke: #000;
+    }
+
+    .tooltip {
+      position: absolute;
+      width: 200px;
+      height: 28px;
+      pointer-events: none;
+    }
+</style>
 
 <title>Fairness Visualization</title>
 
@@ -58,50 +83,16 @@
 
 <!-- D3 library -->
 <script src="{% static 'd3/d3.js' %}"></script>
+<script src="http://d3js.org/d3.v3.min.js"></script>
 
-<!-- C3 library -->
-<link rel="stylesheet" href="{% static 'c3/css/c3.css' %}" />
-<script type="text/javascript" src="{% static 'c3/js/c3.js' %}"></script>
-<script type="text/javascript" src="{% static 'c3/js/c3-plot.js' %}"></script>
-<script type="text/javascript" src="{% static 'c3/js/c3-layers.js' %}"></script>
+<!-- scatter plot --> 
+<script src="{% static 'fairvis/viz_scatterplot.js' %}"></script>
 
-<!-- Chart Styles -->
-<style>
-    .c3.plot {
-        font-family: sans-serif;
-    }
-
-    .c3.plot .layer.average-grade {
-        stroke: purple;
-    }
-
-    .c3.plot .layer.scatter circle.failing {
-        stroke: red;
-    }
-
-    .info-box {
-        padding: 0.5em;
-        border-radius: 0.25em;
-        background-color: black;
-        color: white;
-        font-family: sans-serif;
-    }
-
-    .c3.axis .tick line {
-        stroke: darkgray;
-    }
-    .c3.axis line.grid {
-        stroke-dasharray: 2,2;
-    }
-</style>
-
-
-<div id="viz_scatterplot" class="inactive">
-    <svg width="960" height="500"></svg>
-    <!-- importing viz js -->
-    <script type="text/javascript" src="{% static 'fairvis/viz_scatterplot.js' %}"></script>
-</div>
+<body>
 
 <div id="dataView"></div>
 <div style="display:inline-block; float:left" id="container"></div>
 <div style="display:inline-block; float:left" id="legend"></div>
+
+</body>
+</html>
