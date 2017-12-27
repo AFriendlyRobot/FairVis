@@ -41,7 +41,7 @@
 // });
 
 var data;
-var namefileSelected = false;
+// var namefileSelected = false;
 var datafileSelected = false;
 var predictfileSelected = false;
 var json; 
@@ -52,7 +52,8 @@ $(document).ready(function() {
 	$("#upload-form").on('submit', function(e) {
 		e.preventDefault();
 
-		if (namefileSelected && datafileSelected) {
+		// if (namefileSelected && datafileSelected) {
+		if (datafileSelected) {
 			$.ajax({
 				type: 'POST',
 				url: $(this).attr('action'),
@@ -71,17 +72,17 @@ $(document).ready(function() {
 		}
 	});
 
-	$("#namefile").change(function() {
-		if ($("#namefile").val()) {
-			namefileSelected = true;
-		} else {
-			namefileSelected = false;
-		}
+	// $("#namefile").change(function() {
+	// 	if ($("#namefile").val()) {
+	// 		namefileSelected = true;
+	// 	} else {
+	// 		namefileSelected = false;
+	// 	}
 
-		if (namefileSelected && datafileSelected) {
-			enableFormSubmit();
-		}
-	});
+	// 	if (namefileSelected && datafileSelected) {
+	// 		enableFormSubmit();
+	// 	}
+	// });
 
 	$("#datafile").change(function() {
 		if ($("#datafile").val()) {
@@ -90,7 +91,8 @@ $(document).ready(function() {
 			datafileSelected = false;
 		}
 
-		if (namefileSelected && datafileSelected) {
+		// if (namefileSelected && datafileSelected) {
+		if (datafileSelected) {
 			enableFormSubmit();
 		}
 	});
@@ -114,7 +116,7 @@ function disableFormSubmit() {
 }
 
 function clearForm() {
-	$("#namefile").val("");
+	// $("#namefile").val("");
 	$("#datafile").val("");
 	$("#predictfile").val("");
 	disableFormSubmit();

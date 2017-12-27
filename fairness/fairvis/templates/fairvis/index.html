@@ -41,10 +41,10 @@
 
 <form id="upload-form" action="{% url 'fairvis:upload' %}" method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    <div class="form-group">
+    <!-- <div class="form-group">
         <label for="namefile">Column Names</label>
         <input type="file" name="namefile" id="namefile" class="form-control" />
-    </div>
+    </div> -->
     <div class="form-group">
         <label for="datafile">Data CSV</label>
         <input type="file" name="datafile" id="datafile" class="form-control" />
