@@ -124,7 +124,7 @@ function clearForm() {
 
 
 function parseData(obj) {
-	console.log(obj);
+	// console.log(obj);
 	json = obj;
 	$("#upload-form").addClass("inactive");
 	$("#sample-visualization").removeClass("inactive");

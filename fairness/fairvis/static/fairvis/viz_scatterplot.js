@@ -1,38 +1,51 @@
 // draw scatter plot
 
 
-
-
-var paramIndex = 1;
-var predictionIndex = 5;
+var paramID = 14;
+var predictionID = "linear";
 var colorIndex = 2;  
 var data;
 var margin, width, height;
-var xValue, xScale, xMap, xAxis, yValue, yScale, yMap, yAxis; 
+var xValue, xScale, xMap, xAxis; 
+var yValue, yScale, yMap, yAxis; 
+var tValue;
 var cValue, color; 
 var svg, tooltip;
+var cnt; 
 
 
 function setup() {
-	data = json;
+	data = json.dataPoints;
 
-	margin = { top: 20, right: 20, left: 40, bottom: 30 };
+	margin = { top: 50, right: 30, left: 50, bottom: 30 };
 	width = 960 - margin.left - margin.right;
 	height = 500 - margin.top - margin.bottom;  
 
-	xValue = function (d) { return d[paramIndex]; };
+	xValue = function (d) { return d.data[paramID]; };
 	xScale = d3.scale.linear().range([0, width]);
 	xMap = function (d) { return xScale(xValue(d)); };
 	xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 
-	yValue = function (d) { return d[predictionIndex]; };
+	yValue = function (d) { return d.predictions[predictionID]; };
 	yScale = d3.scale.linear().range([height, 0]);
 	yMap = function (d) { return yScale(yValue(d)); };
 	yAxis = d3.svg.axis().scale(yScale).orient("left");
 
+	tValue = function (d) { return d.trueVal; };
+
 	// set up fill color 
-	// TODO: change the color for datapoint display (cicrles)
-	cValue = function (d) { return 0; }; //data.dataFile[index][colorIndex]; }, 
+	// TODO: change the thresholds
+	cValue = function (d) { 
+		var diff = Math.abs(d.trueVal - d.predictions[predictionID]); 
+		if (diff < 100) 
+			return "diff < 100"; 
+		else if (diff < 200) 
+			return "100 <= diff < 200"; 
+		else if (diff < 300) 
+			return "200 <= diff < 300"; 
+		else 
+			return "diff >= 300";
+	}; 
 	color = d3.scale.category10(); 
 
 	// add the graph canvas to the body of html 
@@ -78,18 +91,22 @@ function draw_plot() {
 		.text("prediction score"); 
 
 	svg.selectAll(".dot")
-		.data(data.dataFile)
+		.data(data)
 		.enter().append("circle")
 		.attr("class", "dot")
 		.attr("r", 3.5) 
 		.attr("cx", xMap)
 		.attr("cy", yMap)
-		.style("fill", function(d) { return color(cValue(d)); })
+		.style("fill", function(d) { 
+			return color(cValue(d)); 
+		})
 		.on("mouseover", function(d) {
 			tooltip.transition() 
 				.duration(200)
 				.style("opacity", .9); 
-			tooltip.html(data.nameFile[d] + "<br/> ("+ xValue(d) + ", " + yValue(d) + ")")
+			tooltip.html("param value: "+ xValue(d) + 
+				"<br/>" + "prediction value :" + yValue(d) + 
+				"<br/>" + "true value: "+tValue(d))
 				.style("left", (d3.event.pageX + 5) + "px")
 				.style("top", (d3.event.pageY - 28) + "px"); 
 		}) 
@@ -120,5 +137,4 @@ function draw_plot() {
 	  .attr("dy", ".35em")
 	  .style("text-anchor", "end")
 	  .text(function(d) { return d;})
-
 }

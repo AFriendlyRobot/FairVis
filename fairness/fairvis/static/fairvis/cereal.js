@@ -44,7 +44,7 @@ d3.csv("../static/fairvis/cereal.csv", function(error, data) {
   data.forEach(function(d) {
     d.Calories = +d.Calories;
     d["Protein (g)"] = +d["Protein (g)"];
-    console.log(d);
+    // console.log(d);
   });
 
   // don't want dots overlapping axis, so add in buffer to data domain
@@ -83,7 +83,9 @@ d3.csv("../static/fairvis/cereal.csv", function(error, data) {
       .attr("r", 3.5)
       .attr("cx", xMap)
       .attr("cy", yMap)
-      .style("fill", function(d) { return color(cValue(d));}) 
+      .style("fill", function(d) { 
+        return color(cValue(d));
+      }) 
       .on("mouseover", function(d) {
           tooltip.transition()
                .duration(200)
