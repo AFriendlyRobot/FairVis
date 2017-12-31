@@ -33,6 +33,12 @@ def upload(request):
         dfile = request.FILES['datafile']
         names, data = parse_file(dfile)
 
+        predictions = None
+        if 'predictfile' in request.FILES:
+            predictions = parse_predictions(request.FILES['predictfile'])
+            print(predictions)
+            print(len(predictions))
+
         full_data = {}
         full_data['nameData'] = names
         full_data['trainData'] = data
@@ -68,6 +74,8 @@ def upload(request):
             new_point['predictions']['linear'] = full_data['linearPredictions'][i]
             new_point['predictions']['rforest'] = full_data['rforestPredictions'][i]
             new_point['trueVal'] = new_data[-1]
+            if predictions:
+                new_point['userPredicted'] = predictions[i]
             response_data.append(new_point)
 
         return JsonResponse({"colNames": names, "dataPoints": response_data})
@@ -118,6 +126,19 @@ def split_data(data):
     return train_data, train_results, predict_data
 
 
+def parse_predictions(pfile):
+    predictions = []
+
+    for line in pfile:
+        l = line.decode('utf-8').strip()
+        if len(l) > 0:
+            predictions.append(l)
+        else:
+            predictions.append("NA")
+
+    return predictions
+
+
 
 def linear_prediction(data):
     # TODO(tfs): How do we split up test/train? How do we handle their predictions, similarly?
@@ -160,6 +181,7 @@ def rforest_regression(data):
     predictions = rf.predict(predict_data)
 
     return predictions
+
 
     
 
