@@ -36,8 +36,6 @@ def upload(request):
         predictions = None
         if 'predictfile' in request.FILES:
             predictions = parse_predictions(request.FILES['predictfile'])
-            print(predictions)
-            print(len(predictions))
 
         full_data = {}
         full_data['nameData'] = names
