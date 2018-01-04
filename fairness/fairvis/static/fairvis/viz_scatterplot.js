@@ -18,11 +18,11 @@ function setup() {
 	data = json.dataPoints;
 
 	margin = { top: 50, right: 30, left: 50, bottom: 30 };
-	width = 960 - margin.left - margin.right;
-	height = 500 - margin.top - margin.bottom;  
+	width = 1400 - margin.left - margin.right;
+	height = 600 - margin.top - margin.bottom;  
 
-	xValue = function (d) { return d.data[paramID]; };
-	xScale = d3.scale.linear().range([0, width]);
+	xValue = function (d) { return Number.parseFloat(d.data[paramID]); };
+	xScale = d3.scale.linear().range([0, width - 150]);
 	xMap = function (d) { return xScale(xValue(d)); };
 	xAxis = d3.svg.axis().scale(xScale).orient("bottom");
 
@@ -60,8 +60,8 @@ function setup() {
 		.attr("class", "tooltip")
 		.style("opacity", 0); 
 
-	xScale.domain([d3.min(data, xValue)-1, d3.max(data, xValue)+1]);
-	yScale.domain([d3.min(data, yValue)-1, d3.max(data, yValue)+1]);
+	xScale.domain([0, d3.max(data, xValue)+1]);
+	yScale.domain([0, d3.max(data, yValue)+1]);
 }
 
 
