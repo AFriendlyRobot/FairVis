@@ -1,7 +1,8 @@
 // draw scatter plot
 
 
-var paramID = 14;
+// var paramID = 14;
+var selectedFeature;
 var predictionID = "linear";
 var colorIndex = 2;  
 var data;
@@ -11,17 +12,42 @@ var yValue, yScale, yMap, yAxis;
 var tValue;
 var cValue, color; 
 var svg, tooltip;
-var cnt; 
+var cnt;
+var colNames;
+
+
+function initialize() {
+	data = json.dataPoints;
+	colNames = json.colNames;
+
+	// Populate controls
+	var newOpt;
+	for (var i = 0; i < colNames.length; i++) {
+		newOpt  = "<option class=\"featureSelectOption\" value=\"";
+		newOpt += colNames[i];
+		newOpt += "\">" + colNames[i];
+		newOpt += "</option>";
+		$("#featureSelection").append(newOpt);
+	}
+	$("#featureSelection").val(colNames[0]);
+
+	$("#featureSelection").on("change", function() {
+		$("svg").remove();
+		setup();
+		draw_plot();
+	});
+}
 
 
 function setup() {
-	data = json.dataPoints;
+	selectedFeature = function() { return $("#featureSelection").val(); };
 
+	// Setup viz
 	margin = { top: 50, right: 30, left: 50, bottom: 30 };
-	width = 1400 - margin.left - margin.right;
-	height = 600 - margin.top - margin.bottom;  
+	width = 800 - margin.left - margin.right;
+	height = 600 - margin.top - margin.bottom;
 
-	xValue = function (d) { return Number.parseFloat(d.data[paramID]); };
+	xValue = function (d) { return Number.parseFloat(d.data[selectedFeature()]); };
 	xScale = d3.scale.linear().range([0, width - 150]);
 	xMap = function (d) { return xScale(xValue(d)); };
 	xAxis = d3.svg.axis().scale(xScale).orient("bottom");

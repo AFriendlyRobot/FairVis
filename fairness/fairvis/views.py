@@ -66,12 +66,15 @@ def upload_data(request):
                 # print(j)
                 # print(names[j])
                 # print(new_data[j])
-                new_point['data'][names[j]] = new_data[j]
+                featVal = new_data[j]
+                if not featVal == "NA":
+                    featVal = float(featVal)
+                new_point['data'][names[j]] = featVal
             # new_point['data'] = full_data['trainData'][i]
             new_point['predictions'] = {}
-            new_point['predictions']['linear'] = full_data['linearPredictions'][i]
-            new_point['predictions']['rforest'] = full_data['rforestPredictions'][i]
-            new_point['trueVal'] = new_data[-1]
+            new_point['predictions']['linear'] = float(full_data['linearPredictions'][i])
+            new_point['predictions']['rforest'] = float(full_data['rforestPredictions'][i])
+            new_point['trueVal'] = float(new_data[-1])
             if predictions:
                 new_point['userPredicted'] = predictions[i]
             response_data.append(new_point)

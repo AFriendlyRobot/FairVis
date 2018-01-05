@@ -1,4 +1,4 @@
-var data;
+// var data;
 // var namefileSelected = false;
 var datafileSelected = false;
 var predictfileSelected = false;
@@ -90,6 +90,7 @@ function parseData(obj) {
 	$("#viz-container").removeClass("inactive-viz");
 
 	// draw viz after parsing csv into json
+	initialize();
 	setup();
 	draw_plot();
 }
