@@ -20,9 +20,9 @@ function initialize() {
 	data = json.dataPoints;
 	colNames = json.colNames;
 
-	// Populate controls
-	var newOpt;
-	for (var i = 0; i < colNames.length; i++) {
+	// Populate controls, skipping target variable (colNames.length - 1)
+	var newOpts
+	for (var i = 0; i < colNames.length - 1; i++) {
 		newOpt  = "<option class=\"featureSelectOption\" value=\"";
 		newOpt += colNames[i];
 		newOpt += "\">" + colNames[i];
@@ -102,7 +102,7 @@ function draw_plot() {
 		.attr("x", width)
 		.attr("y", -6)
 		.style("text-anchor", "end")
-		.text("chosen param");
+		.text(selectedFeature());
 
 	// y axis
 	svg.append("g")
@@ -130,7 +130,7 @@ function draw_plot() {
 			tooltip.transition() 
 				.duration(200)
 				.style("opacity", .9); 
-			tooltip.html("param value: "+ xValue(d) + 
+			tooltip.html("Value for column " + selectedFeature() + ": "+ xValue(d) + 
 				"<br/>" + "prediction value :" + yValue(d) + 
 				"<br/>" + "true value: "+tValue(d))
 				.style("left", (d3.event.pageX + 5) + "px")
