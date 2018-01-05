@@ -2,6 +2,10 @@
 	background-color: green;
 }*/ 
 
+/*******************************************/
+/*                General                  */
+/*******************************************/
+
 .centered {
 	text-align: center;
 }
@@ -11,13 +15,69 @@
 	display: none;
 }
 
-#upload-form {
-	width: 80vw;
-	margin: auto;
+body {
+  font: 11px sans-serif;
 }
 
 #main-header {
 	margin-bottom: 20px;
 }
+
+
+/*******************************************/
+/*             Upload Controls             */
+/*******************************************/
+
+#upload-form {
+	width: 80vw;
+	margin: auto;
+}
+
+.inactive-upload-form {
+	display: none;
+	visibility: hidden;
+}
+
+#upload-container {
+	margin: auto;
+	width: 90vh;
+	border: 1px black solid;
+	padding: 20px;
+}
+
+input[type=file] {
+	
+}
+
+
+
+/*******************************************/
+/*                 Plots                   */
+/*******************************************/
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.dot {
+  stroke: #000;
+}
+
+.tooltip {
+  position: absolute;
+  width: 200px;
+  height: 28px;
+  pointer-events: none;
+}
+
+
+
+
+
+
+
 
 
