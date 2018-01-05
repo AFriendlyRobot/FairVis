@@ -49,7 +49,7 @@ function setup() {
 	color = d3.scale.category10(); 
 
 	// add the graph canvas to the body of html 
-	svg = d3.select("body").append("svg")
+	svg = d3.select("#viz-container").append("svg")
 		.attr("width", width + margin.left + margin.right)
 		.attr("height", height + margin.top + margin.bottom)
 		.append("g")

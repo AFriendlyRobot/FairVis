@@ -87,6 +87,8 @@ function parseData(obj) {
 	$("#upload-container").addClass("inactive");
 	$("#sample-visualization").removeClass("inactive");
 
+	$("#viz-container").removeClass("inactive-viz");
+
 	// draw viz after parsing csv into json
 	setup();
 	draw_plot();
