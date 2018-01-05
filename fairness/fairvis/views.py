@@ -25,7 +25,7 @@ def index(request):
 
     return render(request, 'fairvis/index.html', {})
 
-def upload(request):
+def upload_data(request):
     if request.method == 'POST':
         # nfile = request.FILES['namefile']
         # names = parse_file(nfile)
@@ -83,6 +83,8 @@ def upload(request):
         return HttpResponse("Nope")
 
 
+def upload_prediction(request):
+    return JsonResponse({})
 
 
 
@@ -130,7 +132,7 @@ def parse_predictions(pfile):
     for line in pfile:
         l = line.decode('utf-8').strip()
         if len(l) > 0:
-            predictions.append(l)
+            predictions.append(float(l))
         else:
             predictions.append("NA")
 

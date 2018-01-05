@@ -1,66 +1,90 @@
 {% load static %}
 
-<html>
 <!-- Latest compiled and minified CSS -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
 <!-- Optional theme -->
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 
+<!-- <link rel="stylesheet" href="{% static 'fairvis/bootstrap.min.css' %}"> -->
+
+<!-- <link rel="stylesheet" href="{% static 'fairvis/bootstrap-theme.min.css' %}"> -->
+
 <link rel="stylesheet" href="{% static 'fairvis/style.css' %}" />
 <!-- <link rel="stylesheet" href="{% static 'fairvis/plot.css' %}" /> -->
-
-<style>
-    body {
-      font: 11px sans-serif;
-    }
-
-    .axis path,
-    .axis line {
-      fill: none;
-      stroke: #000;
-      shape-rendering: crispEdges;
-    }
-
-    .dot {
-      stroke: #000;
-    }
-
-    .tooltip {
-      position: absolute;
-      width: 200px;
-      height: 28px;
-      pointer-events: none;
-    }
-</style>
 
 <title>Fairness Visualization</title>
 
 <h1 id="main-header" class="centered">Understanding Fairness in Data and ML</h1>
 
 
-<form id="upload-form" action="{% url 'fairvis:upload' %}" method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <!-- <div class="form-group">
-        <label for="namefile">Column Names</label>
-        <input type="file" name="namefile" id="namefile" class="form-control" />
-    </div> -->
-    <div class="form-group">
-        <label for="datafile">Data CSV</label>
-        <input type="file" name="datafile" id="datafile" class="form-control" />
+<div id="upload-container">
+    <div id="data-upload-container">
+        <form id="data-upload-form" action="{% url 'fairvis:upload_data' %}" method="post" enctype="multipart/form-data" class="upload-form">
+
+            {% csrf_token %}
+
+            <!-- <div class="form-group">
+                <label for="namefile">Column Names</label>
+                <input type="file" name="namefile" id="namefile" class="form-control" />
+            </div> -->
+
+            <div class="form-group">
+                <div class="input-group input-file" name="datafileUpload">
+                    <label for="datafile">Data CSV</label>
+                    <input type="file" name="datafile" id="datafile" class="" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="input-group input-file" name="predictfileUpload">
+                    <label for="predictfile">Predictions</label>
+                    <input type="file" name="predictfile" id="predictfile" class="" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <input type="checkbox" id="classification" name="classification" />
+                <label for="classification">Discrete target values (classes)</label>
+            </div>
+            <input type="submit" name="submit" value="Upload" id="dataSubmit" disabled="true" class="btn btn-primary"/>
+        </form>
+      </div>
+
+      <div id="prediction-upload-container" class="inactive-upload-form">
+        <form id="prediction-upload-form" action="{% url 'fairvis:upload_prediction' %}" method="post" enctype="multipart/form-data" class="upload-form">
+            {% csrf_token %}
+            <!-- <div class="form-group">
+                <label for="namefile">Column Names</label>
+                <input type="file" name="namefile" id="namefile" class="form-control" />
+            </div> -->
+            <div class="form-group">
+                <label for="datafile">Data CSV</label>
+                <input type="file" name="datafile" id="datafile" class="form-control" />
+            </div>
+            <div class="form-group">
+                <div class="input-group input-file" name="predictfileUpload">
+                    <label for="predictfile">Predictions</label>
+                    <input type="file" name="predictfile" id="predictfile" class="form-control" />
+                </div>
+            </div>
+            <div class="form-group">
+                <input type="checkbox" id="classification" name="classification" />
+                <label for="classification">Discrete target values (classes)</label>
+            </div>
+            <input type="submit" name="submit" value="Upload" id="dataSubmit" disabled="true" class="btn btn-primary"/>
+        </form>
     </div>
-    <div class="form-group">
-        <div class="input-group input-file" name="predictfileUpload">
-            <label for="predictfile">Predictions</label>
-            <input type="file" name="predictfile" id="predictfile" class="form-control" />
-        </div>
-    </div>
-    <div class="form-group">
-        <input type="checkbox" id="classification" name="classification" />
-        <label for="classification">Discrete target values (classes)</label>
-    </div>
-    <input type="submit" name="submit" value="Upload" id="dataSubmit" disabled="true" class="btn btn-primary"/>
-</form>
+</div> <!-- End upload forms -->
+
+
+<div>
+
+  <div id="dataView"></div>
+  <div style="display:inline-block; float:left" id="container"></div>
+  <div style="display:inline-block; float:left" id="legend"></div>
+
+</div>
 
 
 <!-- Ref: https://codepen.io/Sebus059/pen/MwMQbP?editors=1010 -->
@@ -83,16 +107,16 @@
 
 <!-- D3 library -->
 <script src="https://d3js.org/d3.v3.min.js"></script>
-<script src="https://d3js.org/d3.v3.js"></script>
+
+<!-- FOR WORK WHILE ON AMTRAK -->
+<!-- <script type="text/javascript" src="{% static 'fairvis/jquery.min.js' %}"></script> -->
+<!-- <script type="text/javascript" src="{% static 'fairvis/bootstrap.min.js' %}"></script> -->
+<!-- <script type="text/javascript" src="{% static 'fairvis/d3.v3.min.js' %}"></script> -->
+<!-- <script type="text/javascript" src="{% static 'fairvis/script.js' %}"></script> -->
+
+
+<!-- <script src="https://d3js.org/d3.v3.js"></script> -->
 
 <!-- scatter plot --> 
 <script src="{% static 'fairvis/viz_scatterplot.js' %}"></script>
 
-<body>
-
-<div id="dataView"></div>
-<div style="display:inline-block; float:left" id="container"></div>
-<div style="display:inline-block; float:left" id="legend"></div>
-
-</body>
-</html>
