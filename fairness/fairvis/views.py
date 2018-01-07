@@ -50,6 +50,7 @@ def upload_data(request):
             full_data['rforestScore'] = rforest_regression(data).tolist()
             full_data['linearPredictions']  = class_prediction(data).tolist()
             full_data['rforestPredictions'] = rforest_classification(data).tolist()
+            full_data['logisticScore'] = logistic_score(data).tolist()
         else:
             full_data['linearPredictions']  = linear_prediction(data).tolist()
             full_data['rforestPredictions'] = rforest_regression(data).tolist()
@@ -79,6 +80,7 @@ def upload_data(request):
             if 'classification' in request.POST:
                 new_point['scores'] = {}
                 new_point['scores']['linear'] = max(min(1, float(full_data['linearScore'][i])), 0)
+                new_point['scores']['logistic'] = full_data['logisticScore'][i]
                 new_point['scores']['rforest'] = max(min(1, float(full_data['rforestScore'][i])), 0)
             new_point['trueVal'] = float(new_data[-1])
             if predictions:
@@ -168,6 +170,16 @@ def class_prediction(data):
     predictions = logreg.predict(predict_data)
 
     return predictions
+
+
+def logistic_score(data):
+    train_data, train_classes, predict_data = split_data(data)
+
+    logreg = LogisticRegression()
+    logreg.fit(train_data, train_classes)
+    probs = logreg.predict_proba(predict_data)
+
+    return probs
 
 
 def rforest_classification(data):
