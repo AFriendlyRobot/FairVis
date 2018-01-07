@@ -46,6 +46,8 @@ def upload_data(request):
 
         # If "classification" checked
         if 'classification' in request.POST:
+            full_data['linearScore'] = linear_prediction(data).tolist()
+            full_data['rforestScore'] = rforest_regression(data).tolist()
             full_data['linearPredictions']  = class_prediction(data).tolist()
             full_data['rforestPredictions'] = rforest_classification(data).tolist()
         else:
@@ -74,6 +76,10 @@ def upload_data(request):
             new_point['predictions'] = {}
             new_point['predictions']['linear'] = float(full_data['linearPredictions'][i])
             new_point['predictions']['rforest'] = float(full_data['rforestPredictions'][i])
+            if 'classification' in request.POST:
+                new_point['scores'] = {}
+                new_point['scores']['linear'] = max(min(1, float(full_data['linearScore'][i])), 0)
+                new_point['scores']['rforest'] = max(min(1, float(full_data['rforestScore'][i])), 0)
             new_point['trueVal'] = float(new_data[-1])
             if predictions:
                 new_point['userPredicted'] = predictions[i]

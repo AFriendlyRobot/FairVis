@@ -82,7 +82,7 @@ function clearForm() {
 
 
 function parseData(obj) {
-	// console.log(obj);
+	console.log(obj);
 	json = obj;
 	$("#upload-container").addClass("inactive");
 	$("#sample-visualization").removeClass("inactive");
