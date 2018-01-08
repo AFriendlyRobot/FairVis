@@ -16,6 +16,12 @@ var cnt;
 var colNames;
 
 
+function draw_scatterplot() {
+	initialize();
+	setup();
+	draw_plot();
+}
+
 function initialize() {
 	data = json.dataPoints;
 	colNames = json.colNames;
@@ -74,8 +80,8 @@ function setup() {
 	}; 
 	color = d3.scale.category10(); 
 
-	// add the graph canvas to the body of html 
-	svg = d3.select("#viz-container").append("svg")
+	// add the graph canvas to the body of html
+	svg = d3.select("#scatterplot").append("svg")
 		.attr("width", width + margin.left + margin.right)
 		.attr("height", height + margin.top + margin.bottom)
 		.append("g")

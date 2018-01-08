@@ -11,6 +11,8 @@
 <!-- <link rel="stylesheet" href="{% static 'fairvis/bootstrap-theme.min.css' %}"> -->
 
 <link rel="stylesheet" href="{% static 'fairvis/style.css' %}" />
+<link rel="stylesheet" href="{% static 'fairvis/tab.css' %}" />
+
 
 <title>Fairness Visualization</title>
 
@@ -76,8 +78,22 @@
     </div>
 </div> <!-- End upload forms -->
 
+<!-- Tab links -->
+<div id="viz-tabs" class="inactive">
+  <div class="tab">
+    <button class="tablinks" onclick="openTab(event, 'fairdef')">Fairness Definition</button>
+    <button class="tablinks" onclick="openTab(event, 'scatterplot')">Scatter Plot</button>
+    <button class="tablinks" onclick="openTab(event, 'histogram')">Histogram</button>
+  </div>
+</div>
 
-<div id="viz-container" class="inactive-viz">
+<!-- Tab content -->
+<div id="fairdef" class="tabcontent">
+  <h3>fairness definition</h3>
+  <p>hey.</p> 
+</div>
+
+<div id="scatterplot" class="tabcontent">
     <div id="viz-controls">
         <select id="featureSelection" class="selectpicker"></select>
     </div>
@@ -85,6 +101,16 @@
     <div style="display:inline-block; float:left" id="container"></div>
     <div style="display:inline-block; float:left" id="legend"></div>
 </div>
+
+<div id="histogram" class="tabcontent">
+  <h3>2 histogram</h3>
+  <p>hey.</p> 
+</div>
+
+
+
+
+
 
 
 <!-- Ref: https://codepen.io/Sebus059/pen/MwMQbP?editors=1010 -->
@@ -117,6 +143,7 @@
 
 <!-- <script src="https://d3js.org/d3.v3.js"></script> -->
 
-<!-- scatter plot --> 
+<!-- js for plots and tabs --> 
 <script src="{% static 'fairvis/viz_scatterplot.js' %}"></script>
-
+<script src="{% static 'fairvis/viz_histogram.js' %}"></script>
+<script src="{% static 'fairvis/tab.js' %}"></script>
