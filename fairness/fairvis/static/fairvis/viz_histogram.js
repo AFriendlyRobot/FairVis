@@ -57,7 +57,7 @@ function histogram_initialize() {
 		$("#group2Selection").empty();
 
 		// populate the two sub selectors
-		var options = getGroupOptions($("#protectedSelection").val());  
+		var options = getGroupOptions($("#protectedSelection").val());
 		var newOpts
 		for (var i = 0; i < options.length; i++) {
 			newOpt  = "<option class=\"groupSelectOption\" value=\"";

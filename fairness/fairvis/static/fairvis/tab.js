@@ -1,6 +1,7 @@
 var currActive; 
 var flag_scatterplot = false;
 var flag_histogram = false;
+var flag_calibration = false;
 
 function openTab(evt, tabName) {
     // Declare all variables
@@ -29,7 +30,7 @@ function openTab(evt, tabName) {
 function callFunc(tabName) {
     if(currActive != tabName) {
         if (tabName == "fairdef") 
-            ;
+            return;
         else if (tabName == "scatterplot" && !flag_scatterplot){
              //$("#scatterplot").removeClass("inactive-viz");
             draw_scatterplot();
@@ -38,6 +39,9 @@ function callFunc(tabName) {
         else if (tabName == "histogram" && !flag_histogram) {
             histogram_initialize();
             flag_histogram = true;
+        } else if (tabName == "calibration" && !flag_calibration) {
+            calibration_initialize();
+            flag_calibration = true;
         }
     }
 }

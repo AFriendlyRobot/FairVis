@@ -84,6 +84,7 @@
     <button class="tablinks" onclick="openTab(event, 'fairdef')">Fairness Definition</button>
     <button class="tablinks" onclick="openTab(event, 'scatterplot')">Scatter Plot</button>
     <button class="tablinks" onclick="openTab(event, 'histogram')">Histogram</button>
+    <button class="tablinks" onclick="openTab(event, 'calibration')">Calibration</button>
   </div>
 </div>
 
@@ -115,28 +116,28 @@
               <br><br>
               Model: <select id="modelSelection" class="selectpicker"></select>
               <br><br>
-              <button class="visualize_histogram" onclick="draw_histogram()">Visualize/Reset</button>
+              <button class="btn btn-primary visualize_histogram" onclick="draw_histogram()">Visualize/Reset</button>
 
               <p><p><br><br>
 
-              <button class="demo" id="statistical-parity">Statistical Parity</button>
+              <button class="demo btn btn-default" id="statistical-parity">Statistical Parity</button>
               <br>
               desc. 
               <p><br>
-              <button class="demo" id="conditional-statistical-parity">Conditional Statistical Parity</button>
+              <button class="demo btn btn-default" id="conditional-statistical-parity">Conditional Statistical Parity</button>
               <br>
               desc.
               <p><br>
-              <button class="demo" id="predictive-equality">Predictive Equality</button>
+              <button class="demo btn btn-default" id="predictive-equality">Predictive Equality</button>
               <br>
               desc.
               <p><br>
-              <button class="demo" id="predictive-parity">Predictive Parity</button>
+              <button class="demo btn btn-default" id="predictive-parity">Predictive Parity</button>
 
               <br>
               desc.
               <p><br>
-              <button class="demo" id="error-rate-balance">Error Rate Balance</button>
+              <button class="demo btn btn-default" id="error-rate-balance">Error Rate Balance</button>
               <br>
               desc.
 
@@ -164,6 +165,41 @@
       </td>
     </tr>
   </table>
+</div>
+
+<div id="calibration" class="tabcontent">
+    <h3>Evaluation of Calibration</h3>
+    <table>
+        <tr>
+            <td rowspan=4 width=300 valign="top">
+                <div id="calibration-buttons">
+                    Protected field: <select id="calibration-protected-selection" class="selectpicker"></select>
+
+                    <br /><br />
+
+                    Protected field value: <select id="calibration-class-value-selection" class="selectpicker"></select>
+
+                    <br /><br />
+
+                    Model: <select id="calibration-prediction-selection" class="selectpicker"></select>
+
+                    <br /><br />
+
+                    Number of bins: <input type="number" name="calibration-num-bins" id="calibration-num-bins" min="2" value="10" />
+
+                    <br /><br />
+
+                    <button class="btn btn-primary" id="visualize-calibration" onclick="draw_calibration()">Analyze calibration</button>
+                </div>
+            </td>
+        </tr>
+
+        <tr>
+            <td valign="top">
+                <div id="calibration-container"></div>
+            </td>
+        </tr>
+    </table>
 </div>
 
 
@@ -208,6 +244,7 @@
 <!-- <script src="https://d3js.org/d3.v3.js"></script> -->
 
 <!-- js for plots and tabs --> 
+<script src="{% static 'fairvis/viz_calibration.js' %}"></script>
 <script src="{% static 'fairvis/viz_scatterplot.js' %}"></script>
 <script src="{% static 'fairvis/viz_histogram.js' %}"></script>
 <script src="{% static 'fairvis/tab.js' %}"></script>
