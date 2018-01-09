@@ -35,7 +35,9 @@ function callFunc(tabName) {
             draw_scatterplot();
             flag_scatterplot = true;
         }
-        else if (tabName == "histogram" && !flag_histogram)
-            ;
+        else if (tabName == "histogram" && !flag_histogram) {
+            histogram_initialize();
+            flag_histogram = true;
+        }
     }
 }
