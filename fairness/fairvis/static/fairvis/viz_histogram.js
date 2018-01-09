@@ -18,7 +18,10 @@ var CATEGORY_COLORS = ['#039', '#c70'];
 
 
 function draw_histogram() {
-	//histogram_initialize();
+	$("#histogram0").empty();
+	$("#histogram1").empty();
+	$("#histogram-legend0").empty();
+	$("#histogram-legend1").empty();
 	histogram_main(); 
 }
 
