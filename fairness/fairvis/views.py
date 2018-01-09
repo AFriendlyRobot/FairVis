@@ -1,4 +1,5 @@
 import json
+import numpy as np
 
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
@@ -50,7 +51,7 @@ def upload_data(request):
             full_data['rforestScore'] = rforest_regression(data).tolist()
             full_data['linearPredictions']  = class_prediction(data).tolist()
             full_data['rforestPredictions'] = rforest_classification(data).tolist()
-            full_data['logisticScore'] = logistic_score(data).tolist()
+            full_data['logisticScore'] = logistic_score(data)
         else:
             full_data['linearPredictions']  = linear_prediction(data).tolist()
             full_data['rforestPredictions'] = rforest_regression(data).tolist()
@@ -96,6 +97,10 @@ def upload_data(request):
 
 def upload_prediction(request):
     return JsonResponse({})
+
+
+
+
 
 
 
@@ -179,7 +184,7 @@ def logistic_score(data):
     logreg.fit(train_data, train_classes)
     probs = logreg.predict_proba(predict_data)
 
-    return probs
+    return [p[1] for p in probs]
 
 
 def rforest_classification(data):
@@ -202,6 +207,90 @@ def rforest_regression(data):
     predictions = rf.predict(predict_data)
 
     return predictions
+
+
+def bin_scores_and_outcomes(data, scoring_name, num_bins):
+    positive_bins = []
+    negative_bins = []
+    score_bins = []
+    counts = []
+    pairs = []
+
+    for point in data:
+        outcome = point["trueVal"]
+        score = point["scores"][scoring_name]
+        pair = (score, outcome)
+
+        pairs.append(pair)
+
+    sorted_pairs = sorted(pairs, key=lambda x: x[0])
+
+    n = len(sorted_pairs)
+
+    for i in range(n-1):
+        tmp_scores = []
+        positive_bins.append(0)
+        negative_bins.append(0)
+        counts.append(0)
+
+        for j in range(int(i * (n / num_bins)), int((i+1) * (n / num_bins))):
+            tmp_scores.append(pairs[j][0])
+
+            if pairs[j][1] > 0:
+                positive_bins[i] += 1
+            else:
+                negative_bins[i] += 1
+
+            counts[i] += 1
+
+        score_bins.push(np.mean(tmp_scores))
+
+    tmp_scores = []
+    counts.append(0)
+    positive_bins.append(0)
+    negative_bins.append(0)
+
+    for i in range(int((n-1) * (n / num_bins)), n):
+        tmp_scores.append(pairs[i][0])
+
+        if pairs[i][1] > 0:
+            positive_bins[-1] += 1
+        else:
+            negative_bins[-1] += 1
+
+        counts[-1] += 1
+
+    score_bins.push(np.mean(tmp_scores))
+
+    return score_bins, positive_bins, negative_bins, counts
+
+
+def check_calibration(data, scoring_name, num_bins):
+    scores, pos, neg, counts = bin_scores_and_outcomes(data, scoring_name, num_bins)
+
+    stat = 0
+
+    for i in range(len(scores)):
+        numer = (pos[i] - (scores[i]*counts[i]))
+        numer *= 2
+
+        denom = (scores[i] * counts[i]) * max(0, (1 - scores[i]))
+
+        stat += numer / denom
+
+    return 
+
+
+
+
+
+
+
+
+
+
+
+
 
 
     
