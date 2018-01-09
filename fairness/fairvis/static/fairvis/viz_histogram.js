@@ -8,7 +8,7 @@ var HISTOGRAM_WIDTH = 370;
 var HISTOGRAM_LEGEND_HEIGHT = 60;
 
 // Histogram bucket width
-var HISTOGRAM_BUCKET_SIZE = 2;
+var HISTOGRAM_BUCKET_SIZE = 0.1;
 
 // Padding on left; needed within SVG so annotations show up.
 var LEFT_PAD = 10;
@@ -16,6 +16,11 @@ var LEFT_PAD = 10;
 // Colors of categories of items.
 var CATEGORY_COLORS = ['#039', '#c70'];
 
+
+function draw_histogram() {
+	//histogram_initialize();
+	histogram_main(); 
+}
 
 
 function histogram_initialize() {
@@ -64,18 +69,11 @@ function histogram_initialize() {
 		}
 
 		// redraw plot 
-		$("svg").remove();
-		draw_histogram();
-	});
 
-	$("#modelSelection").on("change", function() {
-		// redraw plot 
-		$("svg").remove();
-		draw_histogram();
-	}); 
+	});
 }
 
-function draw_histogram() { 
+function histogram_main() { 
 	var tprValue = 300;
  	var fprValue = -700;
 
@@ -115,11 +113,12 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 	var items = copyItems(model.items);
 
 	// Icons
-	var numBuckets = 100 / HISTOGRAM_BUCKET_SIZE;
+	// var numBuckets = 1 / HISTOGRAM_BUCKET_SIZE;
+	var numBuckets = 20;
 	var pedestalWidth = numBuckets * SIDE;
 	var hx = (width - pedestalWidth) / 2;
 	var scale = d3.scaleLinear().range([hx, hx + pedestalWidth]).
-	domain([0, 100]);
+	domain([0, 1]);
 
 	function histogramLayout(items, x, y, side, low, high, bucketSize) {
 		var buckets = [];
@@ -139,7 +138,8 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 
 	var tx = width / 2;
 	var topY = 60;
-	var axis = d3.axisBottom(scale);
+	// var axis = d3.axisBottom(scale);
+    var axis = d3.axisBottom(scale);
 	svg.append('g').attr('class', 'histogram-axis')
 	.attr('transform', 'translate(0,-8)')
 	.call(axis);
@@ -148,9 +148,122 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 	if (noThreshold) {
 		return;
 	}
+	// Sliding threshold bar.
+	var cutoff = svg.append('rect').attr('x', tx - 2).attr('y', topY - 10).
+	attr('width', 3).attr('height', height - topY);
+
+	var thresholdLabel = svg.append('text').text('threshold: 50')
+	.attr('x', tx)
+	.attr('y', 40)
+	.attr('text-anchor', 'middle').attr('class', 'bold-label');
+
+	if (includeAnnotation) {
+		var annotationPad = 10;
+		var annotationW = 200;
+		var thresholdAnnotation = svg.append('rect')
+		.attr('class', 'annotation group-unaware-annotation')
+		.attr('x', tx - annotationW / 2)
+		.attr('y', 30 - annotationPad)
+		.attr('rx', 20)
+		.attr('ry', 20)
+		.attr('width', annotationW)
+		.attr('height', 30);
+	}
+
+	function setThreshold(t, eventFromUser) {
+		t = Math.max(0, Math.min(t, 100));
+		if (eventFromUser) {
+			t = HISTOGRAM_BUCKET_SIZE * Math.round(t / HISTOGRAM_BUCKET_SIZE);
+		} else {
+			tx = Math.round(scale(t));
+		}
+		tx = Math.max(0, Math.min(width - 4, tx));
+		var rounded = SIDE * Math.round(tx / SIDE);
+		cutoff.attr('x', rounded);
+		var labelX = Math.max(50, Math.min(rounded, width - 70));
+		thresholdLabel.attr('x', labelX).text('threshold: ' + t);
+		if (includeAnnotation) {
+			thresholdAnnotation.attr('x', tx - annotationW / 2);
+		}
+		svg.selectAll('.icon').call(defineIcon);
+	}
+	var drag = d3.drag()
+	.on('drag', function() {
+		var oldTx = tx;
+		tx += d3.event.dx;
+		var t = scale.invert(tx);
+		setThreshold(t, true);
+		if (tx != oldTx) {
+			model.classify(t);
+			model.notifyListeners('histogram-drag');
+		}
+	});
+	svg.call(drag);
+	model.addListener(function(event) {
+		for (var i = 0; i < items.length; i++) {
+			items[i].predicted = items[i].score >= model.threshold ? 1 : 0;
+		}
+		setThreshold(model.threshold, event == 'histogram-drag');
+	});
 }
 
-function createHistogramLegend(x, d) {
+function createHistogramLegend(id, category) {
+  var width = HISTOGRAM_WIDTH;
+  var height = HISTOGRAM_LEGEND_HEIGHT;
+  var centerX = width / 2;
+  var boxSide = 16;
+  var centerPad = 1;
+
+  // Create SVG.
+  var svg = d3.select('#' + id).append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+  // Create boxes.
+  svg.append('rect').attr('width', boxSide).attr('height', boxSide)
+    .attr('x', centerX - boxSide - centerPad).attr('y', boxSide)
+    .attr('fill', itemColor(category, 0))
+    .attr('fill-opacity', itemOpacity(1));
+  svg.append('rect').attr('width', boxSide).attr('height', boxSide)
+    .attr('x', centerX + centerPad).attr('y', boxSide)
+    .attr('fill', itemColor(category, 1))
+    .attr('fill-opacity', itemOpacity(1));
+
+  svg.append('rect').attr('width', boxSide).attr('height', boxSide)
+    .attr('x', centerX - boxSide - centerPad).attr('y', 0)
+    .attr('fill', itemColor(category, 0))
+    .attr('fill-opacity', itemOpacity(0));
+  svg.append('rect').attr('width', boxSide).attr('height', boxSide)
+    .attr('x', centerX + centerPad).attr('y', 0)
+    .attr('fill', itemColor(category, 1))
+    .attr('fill-opacity', itemOpacity(0));
+
+  // Draw text.
+  var textPad = 4;
+  svg.append('text')
+      .text('false negative')
+      .attr('x', centerX - boxSide - textPad)
+      .attr('y', 2 * boxSide - textPad)
+      .attr('text-anchor', 'end')
+      .attr('class', 'legend-label');
+  svg.append('text')
+      .text('true negative')
+      .attr('x', centerX - boxSide - textPad)
+      .attr('y', boxSide - textPad)
+      .attr('text-anchor', 'end')
+      .attr('class', 'legend-label');
+  svg.append('text')
+      .text('true positive')
+      .attr('x', centerX + boxSide + textPad)
+      .attr('y', 2 * boxSide - textPad)
+      .attr('text-anchor', 'start')
+      .attr('class', 'legend-label');
+  svg.append('text')
+      .text('false positive')
+      .attr('x', centerX + boxSide + textPad)
+      .attr('y', boxSide - textPad)
+      .attr('text-anchor', 'start')
+      .attr('class', 'legend-label');
 
 }
 
@@ -164,25 +277,25 @@ function Optimizer(model0, model1, stepSize) {
 	return {
 		statisticalParity: function() {
 				
-			draw_histogram();
+			
 		}, 
 		conditionalStatisticalParity: function() {
 
-			draw_histogram();
+			
 		}, 
 		predictiveEquality: function() {
 			
-			draw_histogram();
+			
 
 		},
 		predictiveParity: function() {
 
-			draw_histogram();
+			
 
 		},
 		errorRateBalance: function() {
 
-			draw_histogram();
+			
 
 		}
 	};

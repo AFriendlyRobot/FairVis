@@ -55,14 +55,14 @@ function setup() {
 	height = 600 - margin.top - margin.bottom;
 
 	xValue = function (d) { return Number.parseFloat(d.data[selectedFeature()]); };
-	xScale = d3.scale.linear().range([0, width - 150]);
+	xScale = d3v3.scale.linear().range([0, width - 150]);
 	xMap = function (d) { return xScale(xValue(d)); };
-	xAxis = d3.svg.axis().scale(xScale).orient("bottom");
+	xAxis = d3v3.svg.axis().scale(xScale).orient("bottom");
 
 	yValue = function (d) { return d.predictions[predictionID]; };
-	yScale = d3.scale.linear().range([height, 0]);
+	yScale = d3v3.scale.linear().range([height, 0]);
 	yMap = function (d) { return yScale(yValue(d)); };
-	yAxis = d3.svg.axis().scale(yScale).orient("left");
+	yAxis = d3v3.svg.axis().scale(yScale).orient("left");
 
 	tValue = function (d) { return d.trueVal; };
 
@@ -79,7 +79,7 @@ function setup() {
 		else 
 			return "diff >= 300";
 	}; 
-	color = d3.scale.category10(); 
+	color = d3v3.scale.category10(); 
 
 	// add the graph canvas to the body of html
 	svg = d3.select("#scatterplot").append("svg")
