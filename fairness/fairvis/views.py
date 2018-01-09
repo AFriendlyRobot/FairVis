@@ -1,5 +1,6 @@
 import json
 import numpy as np
+from scipy.stats import chi2
 
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
@@ -278,7 +279,7 @@ def check_calibration(data, scoring_name, num_bins):
 
         stat += numer / denom
 
-    return 
+    return None
 
 
 
