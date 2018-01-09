@@ -24,6 +24,7 @@ function draw_scatterplot() {
 
 function initialize() {
 	data = json.dataPoints;
+	console.log(data);
 	colNames = json.colNames;
 
 	// Populate controls, skipping target variable (colNames.length - 1)
