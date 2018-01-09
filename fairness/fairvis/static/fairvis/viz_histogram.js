@@ -37,7 +37,7 @@ function histogram_initialize() {
 		newOpt += "</option>";
 		$("#protectedSelection").append(newOpt);
 	}
-	$("#protectedSelection").val(null);
+	$("#protectedSelection").val(colNames[0]);
 
 	// populate options for model selector
 	// populate options for model selector
@@ -49,7 +49,9 @@ function histogram_initialize() {
 		newOpt += "</option>";
 		$("#modelSelection").append(newOpt);
 	}
-	$("#modelSelection").val(null);
+	$("#modelSelection").val(modelNames[0]);
+
+	populate_groups();
 
 	$("#protectedSelection").on("change", function() {
 		// clear previous options
@@ -57,19 +59,7 @@ function histogram_initialize() {
 		$("#group2Selection").empty();
 
 		// populate the two sub selectors
-		var options = getGroupOptions($("#protectedSelection").val());
-		var newOpts
-		for (var i = 0; i < options.length; i++) {
-			newOpt  = "<option class=\"groupSelectOption\" value=\"";
-			newOpt += options[i];
-			newOpt += "\">" + options[i];
-			newOpt += "</option>";
-			$("#group1Selection").append(newOpt);
-			$("#group2Selection").append(newOpt);
-		}
-
-		// redraw plot 
-
+		populate_groups();
 	});
 }
 
@@ -79,6 +69,7 @@ function histogram_main() {
 
 	var groups = makeItemsFor2Groups($("#protectedSelection").val(), $("#group1Selection").val(), 
 		$("#group2Selection").val(), $("#modelSelection").val());
+
 	var comparisonExample0 = new GroupModel(groups[0], tprValue, fprValue);
 	var comparisonExample1 = new GroupModel(groups[1], tprValue, fprValue);
 
@@ -152,7 +143,7 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 	var cutoff = svg.append('rect').attr('x', tx - 2).attr('y', topY - 10).
 	attr('width', 3).attr('height', height - topY);
 
-	var thresholdLabel = svg.append('text').text('threshold: 50')
+	var thresholdLabel = svg.append('text').text('threshold: 0.5')
 	.attr('x', tx)
 	.attr('y', 40)
 	.attr('text-anchor', 'middle').attr('class', 'bold-label');
@@ -194,6 +185,7 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 		var t = scale.invert(tx);
 		setThreshold(t, true);
 		if (tx != oldTx) {
+			console.log(t);
 			model.classify(t);
 			model.notifyListeners('histogram-drag');
 		}
@@ -329,11 +321,11 @@ GroupModel.prototype.classify = function(threshold) {
 	var totalPredictedPos = 0; 
 	var totalPosPredictedPos = 0; 
 
-	this.item.forEach(function(item) {
+	this.items.forEach(function(item) {
 		item.predicted = item.score >= threshold ? 1 : 0; 
 	});
 	this.tpr = tpr(this.items); 
-	this.positiveRate = PostiveRate(this.items);
+	this.positiveRate = postiveRate22(this.items);
 };
 
 // GroupModels follow a very simple observer pattern; they
@@ -378,7 +370,7 @@ function tpr(items) {
 }
 
 // Calculate overall positive rate
-function positiveRate(items) {
+function positiveRate22(items) {
   var totalPos = 0;
   items.forEach(function(item) {
     totalPos += item.predicted;
@@ -407,6 +399,22 @@ function getModelNames() {
 		models.push(k); 
 	})
 	return models;
+}
+
+function populate_groups() {
+	var options = getGroupOptions($("#protectedSelection").val());
+	var newOpts
+	for (var i = 0; i < options.length; i++) {
+		newOpt  = "<option class=\"groupSelectOption\" value=\"";
+		newOpt += options[i];
+		newOpt += "\">" + options[i];
+		newOpt += "</option>";
+		$("#group1Selection").append(newOpt);
+		$("#group2Selection").append(newOpt);
+	}
+
+	$("#group1Selection").val(options[0]);
+	$("#group2Selection").val(options[1]);
 }
 
 function itemColor(category, predicted) {
