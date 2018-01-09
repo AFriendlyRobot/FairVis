@@ -8,7 +8,7 @@ var HISTOGRAM_WIDTH = 370;
 var HISTOGRAM_LEGEND_HEIGHT = 60;
 
 // Histogram bucket width
-var HISTOGRAM_BUCKET_SIZE = 0.1;
+var HISTOGRAM_BUCKET_SIZE = 0.02;
 
 // Padding on left; needed within SVG so annotations show up.
 var LEFT_PAD = 10;
@@ -87,8 +87,8 @@ function histogram_main() {
 	// TODO: create pie charts? 
 
 	// make histograms & legends
-	createHistogram('histogram0', comparisonExample0, false, true);
-	createHistogram('histogram1', comparisonExample1, false, true);
+	createHistogram('histogram0', comparisonExample0, false, false);
+	createHistogram('histogram1', comparisonExample1, false, false);
 	createHistogramLegend('histogram-legend0', 0);
 	createHistogramLegend('histogram-legend1', 1);
 
@@ -104,8 +104,8 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 	var items = copyItems(model.items);
 
 	// Icons
-	// var numBuckets = 1 / HISTOGRAM_BUCKET_SIZE;
-	var numBuckets = 20;
+	var numBuckets = 1 / HISTOGRAM_BUCKET_SIZE;
+	//var numBuckets = 20;
 	var pedestalWidth = numBuckets * SIDE;
 	var hx = (width - pedestalWidth) / 2;
 	var scale = d3.scaleLinear().range([hx, hx + pedestalWidth]).
@@ -124,8 +124,9 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 		});
 	}
 
-	histogramLayout(items, hx, bottom, SIDE, 0, 100, HISTOGRAM_BUCKET_SIZE);
+	histogramLayout(items, hx, bottom, SIDE, 0.0, 1.0, HISTOGRAM_BUCKET_SIZE);
 	var svg = createIcons(id, items, width, height);
+	//var svg = createBars(id, items, width, height);
 
 	var tx = width / 2;
 	var topY = 60;
@@ -148,9 +149,11 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 	.attr('y', 40)
 	.attr('text-anchor', 'middle').attr('class', 'bold-label');
 
+	// ignore this part (currently not used)
 	if (includeAnnotation) {
 		var annotationPad = 10;
 		var annotationW = 200;
+		var thresholdAnnotation = null;
 		var thresholdAnnotation = svg.append('rect')
 		.attr('class', 'annotation group-unaware-annotation')
 		.attr('x', tx - annotationW / 2)
@@ -160,6 +163,7 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 		.attr('width', annotationW)
 		.attr('height', 30);
 	}
+	
 
 	function setThreshold(t, eventFromUser) {
 		t = Math.max(0, Math.min(t, 100));
@@ -185,7 +189,6 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 		var t = scale.invert(tx);
 		setThreshold(t, true);
 		if (tx != oldTx) {
-			console.log(t);
 			model.classify(t);
 			model.notifyListeners('histogram-drag');
 		}
@@ -325,7 +328,7 @@ GroupModel.prototype.classify = function(threshold) {
 		item.predicted = item.score >= threshold ? 1 : 0; 
 	});
 	this.tpr = tpr(this.items); 
-	this.positiveRate = postiveRate22(this.items);
+	this.positiveRate = positiveRate(this.items);
 };
 
 // GroupModels follow a very simple observer pattern; they
@@ -370,7 +373,7 @@ function tpr(items) {
 }
 
 // Calculate overall positive rate
-function positiveRate22(items) {
+function positiveRate(items) {
   var totalPos = 0;
   items.forEach(function(item) {
     totalPos += item.predicted;
@@ -422,7 +425,7 @@ function itemColor(category, predicted) {
 }
 
 function itemOpacity(value) {
-  return .3 + .7 * value;
+  return .3 + .7 * value*100;
 }
 
 function iconColor(d) {
@@ -435,14 +438,15 @@ function iconOpacity(d) {
 
 // Icon for a person in histogram or correctness matrix.
 function defineIcon(selection) {
+	console.log("fhh");
   selection
     .attr('class', 'icon')
     .attr('stroke', iconColor)
     .attr('fill', iconColor)
-    .attr('fill-opacity', iconOpacity)
+    .attr('fill-opacity', 1)
     .attr('stroke-opacity', function(d) {return .4 + .6 * d.value;})
-    .attr('cx', function(d) {return d.x + d.side / 2;})
-    .attr('cy', function(d) {return d.y + d.side / 2;})
+    .attr('cx', function(d) {console.log(d.x + d.side / 2); return d.x + d.side / 2; })
+    .attr('cy', function(d) {console.log(d.y + d.side / 2); return d.y + d.side / 2; })
     .attr('r', function(d) {return d.side * .4});
 }
 
@@ -458,6 +462,13 @@ function createIcons(id, items, width, height, pad) {
   .enter().append('circle')
     .call(defineIcon);
   return svg;
+}
+
+function createBars(id, items, width, height) {
+  var svg = d3.select('#' + id).append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
 }
 
 function gridLayout(items, x, y) {
