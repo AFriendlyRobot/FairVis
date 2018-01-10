@@ -3,7 +3,7 @@ var flag_scatterplot = false;
 var flag_histogram = false;
 var flag_calibration = false;
 
-function openTab(evt, tabName) {
+function openTab(id, tabName) {
     // Declare all variables
     var i, tabcontent, tablinks;
 
@@ -21,7 +21,8 @@ function openTab(evt, tabName) {
 
     // Show the current tab, and add an "active" class to the button that opened the tab
     document.getElementById(tabName).style.display = "block";
-    evt.currentTarget.className += " active";
+    // evt.currentTarget.className += " active";
+    $("#" + id).addClass("active");
 
     callFunc(tabName);
     currActive = tabName;

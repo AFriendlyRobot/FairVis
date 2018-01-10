@@ -86,6 +86,7 @@ function parseData(obj) {
 	json = obj;
 	$("#upload-container").addClass("inactive");
 	$("#viz-tabs").removeClass("inactive");
+	$("#definitions-tab").click();
 
 	// $("#scatterplot").removeClass("inactive-viz");
 }
