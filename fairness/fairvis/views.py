@@ -33,6 +33,8 @@ def upload_data(request):
         # names = parse_file(nfile)
 
         dfile = request.FILES['datafile']
+        pfile = request.FILES['protectedfile']
+        pnames, pdata = parse_file(pfile)
         names, data = parse_file(dfile)
 
         predictions = None
@@ -47,15 +49,11 @@ def upload_data(request):
         # parsed_name_file, parsed_data_file = parse_file(dfile)
 
         # If "classification" checked
-        if 'classification' in request.POST:
-            full_data['linearScore'] = linear_prediction(data).tolist()
-            full_data['rforestScore'] = rforest_regression(data).tolist()
-            full_data['linearPredictions']  = class_prediction(data).tolist()
-            full_data['rforestPredictions'] = rforest_classification(data).tolist()
-            full_data['logisticScore'] = logistic_score(data)
-        else:
-            full_data['linearPredictions']  = linear_prediction(data).tolist()
-            full_data['rforestPredictions'] = rforest_regression(data).tolist()
+        full_data['linearScore'] = linear_prediction(data).tolist()
+        full_data['rforestScore'] = rforest_regression(data).tolist()
+        full_data['linearPredictions']  = class_prediction(data).tolist()
+        full_data['rforestPredictions'] = rforest_classification(data).tolist()
+        full_data['logisticScore'] = logistic_score(data)
 
         response_data = []
 
@@ -64,6 +62,7 @@ def upload_data(request):
         for i in range(num_points):
             new_point = {}
             new_data = full_data['trainData'][i]
+            new_point['protected'] = {}
             new_point['data'] = {}
             # print(names)
             # print(new_data)
@@ -75,25 +74,25 @@ def upload_data(request):
                 if not featVal == "NA":
                     featVal = float(featVal)
                 new_point['data'][names[j]] = featVal
+            for j in range(len(pnames)):
+                pfeatVal = pdata[i][j]
+                new_point['protected'][pnames[j]] = str(pfeatVal)
             # new_point['data'] = full_data['trainData'][i]
             new_point['predictions'] = {}
             new_point['predictions']['linear'] = float(full_data['linearPredictions'][i])
             new_point['predictions']['rforest'] = float(full_data['rforestPredictions'][i])
-            if 'classification' in request.POST:
-                new_point['scores'] = {}
-                new_point['scores']['linear'] = max(min(1, float(full_data['linearScore'][i])), 0)
-                new_point['scores']['logistic'] = full_data['logisticScore'][i]
-                new_point['scores']['rforest'] = max(min(1, float(full_data['rforestScore'][i])), 0)
-                if 'predictfile' in request.FILES:
-                    new_point['scores'][user_score_name] = float(predictions[i])
-            else:
-                new_point['scores'] = []
+            new_point['scores'] = {}
+            new_point['scores']['linear'] = max(min(1, float(full_data['linearScore'][i])), 0)
+            new_point['scores']['logistic'] = full_data['logisticScore'][i]
+            new_point['scores']['rforest'] = max(min(1, float(full_data['rforestScore'][i])), 0)
+            if 'predictfile' in request.FILES:
+                new_point['scores'][user_score_name] = float(predictions[i])
             new_point['trueVal'] = float(new_data[-1])
             if predictions:
                 new_point['userPredicted'] = predictions[i]
             response_data.append(new_point)
 
-        return JsonResponse({"colNames": names, "dataPoints": response_data})
+        return JsonResponse({"colNames": names, "protectedColNames": pnames, "dataPoints": response_data})
 
         # return JsonResponse(full_data)
     else:

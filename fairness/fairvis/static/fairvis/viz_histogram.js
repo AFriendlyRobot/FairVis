@@ -46,12 +46,12 @@ function draw_histogram() {
 
 function histogram_initialize() {
 	data = json.dataPoints;
-	var colNames = json.colNames;
+	var colNames = json.protectedColNames;
 	var modelNames = Object.keys(data[0].scores);
 
 	// populate options for protected field selection
 	var newOpts
-	for (var i = 0; i < colNames.length - 1; i++) {
+	for (var i = 0; i < colNames.length; i++) {
 		newOpt  = "<option class=\"protectedSelectOption\" value=\"";
 		newOpt += colNames[i];
 		newOpt += "\">" + colNames[i];
@@ -522,9 +522,9 @@ function makeItemsFor2Groups(fieldName, groupName1, groupName2, modelName) {
 	var group2 = [];
 
 	data.forEach(function(d) {
-		if (d.data[fieldName].toString() == groupName1) {
+		if (d["protected"][fieldName].toString() == groupName1) {
 			group1.push(new Item(0, -111, d.scores[modelName], d.trueVal)); 
-		} else if (d.data[fieldName].toString() == groupName2) {
+		} else if (d["protected"][fieldName].toString() == groupName2) {
 			group2.push(new Item(1, -111, d.scores[modelName], d.trueVal));
 		}
 	});
@@ -571,8 +571,8 @@ function getGroupOptions(colName) {
 	var opts = []; 
 
 	data.forEach(function(d) {
-		if(!opts.includes(d.data[colName])) {
-			opts.push(d.data[colName]); 
+		if(!opts.includes(d["protected"][colName])) {
+			opts.push(d["protected"][colName]); 
 		}
 	});
 	return opts;
@@ -580,7 +580,7 @@ function getGroupOptions(colName) {
 
 function populate_groups() {
 	var options = getGroupOptions($("#protectedSelection").val());
-	var newOpts
+	var newOpts;
 	for (var i = 0; i < options.length; i++) {
 		newOpt  = "<option class=\"groupSelectOption\" value=\"";
 		newOpt += options[i];

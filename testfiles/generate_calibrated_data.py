@@ -7,7 +7,7 @@ from random import random as r
 NUM_BINS = 20
 NUM_PER_BIN = 200
 NUM_CLASSES = 3
-ALL_CAL = False
+ALL_CAL = True
 NUM_EXTRA_FEATURES = 5
 
 
@@ -18,8 +18,11 @@ class Point:
         self.n_extra_feats = n_extra_feats
         self.outcome = outcome
 
-    def write_point(self, dfile, sfile):
-        dfile.write(str(self.cval) + ",")
+    def write_point(self, pfile, dfile, sfile):
+        # dfile.write(str(self.cval) + ",")
+        pfile.write(str(self.cval) + "\n")
+        pfile.flush()
+
         for i in range(self.n_extra_feats):
             dfile.write(str(int(r()*100)))
             dfile.write(",")
@@ -44,12 +47,15 @@ def main():
 def run(ofileloc):
     dfile = open(ofileloc + "_data.csv", "w")
     sfile = open(ofileloc + "_scores.txt", "w")
+    pfile = open(ofileloc + "_protected.csv", "w")
 
-    dfile.write("PROTECTED,")
-    for i in range(NUM_EXTRA_FEATURES):
-        dfile.write("X"+str(i+1)+",")
-    dfile.write("\n")
-    sfile.flush()
+    pfile.write("PROTECTED\n")
+
+    # dfile.write("PROTECTED,")
+    for i in range(NUM_EXTRA_FEATURES-1):
+        dfile.write("X"+str(i)+",")
+    dfile.write("Y\n")
+    dfile.flush()
 
     sfile.write("USER_SCORE\n")
     sfile.flush()
@@ -66,7 +72,7 @@ def run(ofileloc):
 
 
     for p in points:
-        p.write_point(dfile, sfile)
+        p.write_point(pfile, dfile, sfile)
 
 
     dfile.close()

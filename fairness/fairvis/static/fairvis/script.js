@@ -1,8 +1,9 @@
 // var data;
 // var namefileSelected = false;
+var protectedFileSelected = false;
 var datafileSelected = false;
 var predictfileSelected = false;
-var json; 
+var json;
 
 $(document).ready(function() {
 	data = {};
@@ -42,6 +43,19 @@ $(document).ready(function() {
 	// 	}
 	// });
 
+	$("#protectedfile").change(function() {
+		if ($("#protectedfile").val()) {
+			protectedFileSelected = true;
+		} else {
+			protectedFileSelected = false;
+		}
+
+		// if (namefileSelected && datafileSelected) {
+		if (datafileSelected && protectedFileSelected) {
+			enableFormSubmit();
+		}
+	});
+
 	$("#datafile").change(function() {
 		if ($("#datafile").val()) {
 			datafileSelected = true;
@@ -50,7 +64,7 @@ $(document).ready(function() {
 		}
 
 		// if (namefileSelected && datafileSelected) {
-		if (datafileSelected) {
+		if (datafileSelected && protectedFileSelected) {
 			enableFormSubmit();
 		}
 	});
@@ -75,6 +89,7 @@ function disableFormSubmit() {
 
 function clearForm() {
 	// $("#namefile").val("");
+	$("#protectedfile").val("");
 	$("#datafile").val("");
 	$("#predictfile").val("");
 	disableFormSubmit();
@@ -87,6 +102,7 @@ function parseData(obj) {
 	$("#upload-container").addClass("inactive");
 	$("#viz-tabs").removeClass("inactive");
 	$("#definitions-tab").click();
+	$("#main-header").addClass("inactive");
 
 	// $("#scatterplot").removeClass("inactive-viz");
 }

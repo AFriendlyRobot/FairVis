@@ -17,8 +17,8 @@ function calibration_initialize() {
 	var mname;
 
 	// Initialize options for selecting protected field
-	for (var i = 0; i < json.colNames.length - 1; i++) {
-		cname = json.colNames[i];
+	for (var i = 0; i < json.protectedColNames.length; i++) {
+		cname = json.protectedColNames[i];
 		newOpt  = "<option class=\"calibration-protected-feature-option\" value=\"";
 		newOpt += cname + "\">" + cname + "</option>";
 		$("#calibration-protected-selection").append(newOpt);
@@ -37,7 +37,7 @@ function calibration_initialize() {
 	// $("#calibration-protected-selection").change(updateCalibrationClassSelection);
 
 	// Set initial value for protected field
-	$("#calibration-protected-selection").val(json.colNames[0]);
+	$("#calibration-protected-selection").val(json.protectedColNames[0]);
 	$("#calibration-prediction-selection").val(modelNames[0]);
 
 	// updateCalibrationClassSelection();
@@ -163,7 +163,7 @@ function binnedAccuraciesByAttribute(featureName, scoreName, numBins) {
 		point = points[i];
 		outcome = point["trueVal"];
 		score = point["scores"][scoreName];
-		classVal = point["data"][featureName];
+		classVal = point["protected"][featureName];
 		classVal = classVal.toString();
 
 		if (!(Object.keys(tups).includes(classVal))) {
