@@ -37,7 +37,7 @@ def upload_data(request):
 
         predictions = None
         if 'predictfile' in request.FILES:
-            predictions = parse_predictions(request.FILES['predictfile'])
+            user_score_name, predictions = parse_predictions(request.FILES['predictfile'])
 
         full_data = {}
         full_data['nameData'] = names
@@ -84,6 +84,8 @@ def upload_data(request):
                 new_point['scores']['linear'] = max(min(1, float(full_data['linearScore'][i])), 0)
                 new_point['scores']['logistic'] = full_data['logisticScore'][i]
                 new_point['scores']['rforest'] = max(min(1, float(full_data['rforestScore'][i])), 0)
+                if 'predictfile' in request.FILES:
+                    new_point['scores'][user_score_name] = float(predictions[i])
             new_point['trueVal'] = float(new_data[-1])
             if predictions:
                 new_point['userPredicted'] = predictions[i]
@@ -158,7 +160,7 @@ def parse_predictions(pfile):
             else:
                 predictions.append("NA")
 
-    return predictions
+    return name, predictions
 
 
 
