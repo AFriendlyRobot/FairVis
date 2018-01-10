@@ -146,12 +146,17 @@ def split_data(data):
 def parse_predictions(pfile):
     predictions = []
 
+    name = None
+
     for line in pfile:
         l = line.decode('utf-8').strip()
-        if len(l) > 0:
-            predictions.append(float(l))
+        if not name:
+            name = l
         else:
-            predictions.append("NA")
+            if len(l) > 0:
+                predictions.append(float(l))
+            else:
+                predictions.append("NA")
 
     return predictions
 

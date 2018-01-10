@@ -67,9 +67,126 @@ function draw_calibration() {
 	var cy = d3.scaleLinear()
 	           .rangeRound([cheight, 0]);
 
-	// TODO(tfs): Color scale for bars based on number of options
-	// var cz = d3.scaleOridinal()
-	//            .range
+	var ccolorMap = d3.scaleLinear()
+	                  .domain([0, calNumClassOptions()])
+	                  .range("hsl(215,70%,50%)", "hsl(215,100%,80%)")
+	                  .interpolate(d3.interpolateHcl);
+
+	var featureName = $("#calibration-protected-selection").val().toString();
+	var scoreName = $("#calibration-prediction-selection").val().toString();
+	var numBins = parssInt($("#calibration-num-bins").val());
+	var binnedData = binnedAccuraciesByAttribute(featureName, scoreName, numBins);
+}
+
+
+function binnedAccuraciesByAttribute(featureName, scoreName, numBins) {
+	var points = json.dataPoints;
+	var point;
+	var outcome;
+	var score;
+	var positiveBins = {};
+	var negativeBins = {};
+	var scoreBins = {};
+	var counts = {};
+	var tup;
+	var tups = {};
+	var sortedtups;
+	var classVal;
+
+	for (var i = 0; i < points.length; i++) {
+		point = points[i];
+		outcome = point["trueVal"];
+		score = point["scores"][scoreName];
+		classVal = point["data"][featureName];
+		classVal = classVal.toString();
+
+		if (!(Object.keys(tups).includes(classVal))) {
+			tups[classVal] = [];
+		}
+
+		tup = [score, outcome];
+		tups[classVal].push(tup);
+	}
+
+	var classValList = Object.keys(tups);
+
+	for (var i = 0; i < classValList.length; i++) {
+		tups[classValList[i]].sort(function (left, right) {
+			return left[0] < right[0] ? -1 : 1;
+		});
+	}
+
+	var cvName;
+	var n;
+	var ctups;
+
+	for (var ci = 0; ci < classValList.length; ci++) {
+		cvName = classValList[ci];
+		cvName = cvName.toString();
+		n = tups[cvName].length;
+		ctups = tups[cvName];
+
+		positiveBins[cvName] = [];
+		negativeBins[cvName] = [];
+		counts[cvName] = [];
+		scoreBins[cvName] = [];
+
+		for (var i = 0; i < (numBins - 1); i++) {
+			var tmpScores = [];
+			positiveBins[cvName].push(0);
+			negativeBins[cvName].push(0);
+			counts[cvName].push(0);
+			for (var j = Math.floor(i * (n / numBins)); j < Math.floor((i+1) * (n / numBins)); j++) {
+				tmpScores.push(ctups[j][0]);
+
+				if (ctups[j][1] > 0) {
+					positiveBins[cvName][i] += 1;
+				} else {
+					negativeBins[cvName][i] += 1;
+				}
+
+				counts[cvName][i] += 1;
+			}
+
+			scoreBins[cvName].push(((tmpScores.reduce((prev, curr) => curr += prev)) / tmpScores.length));
+		}
+
+		positiveBins[cvName].push(0);
+		negativeBins[cvName].push(0);
+		counts[cvName].push(0);
+		tmpScores = [];
+
+		for (var i = Math.floor((numBins - 1) * (n / numBins)); i < n; i++) {
+			tmpScores.push(ctups[i][0]);
+
+			if (ctups[i][1] > 0) {
+				positiveBins[cvName][numBins - 1] += 1;
+			} else {
+				negativeBins[cvName][numBins - 1] += 1;
+			}
+
+			counts[cvName][numBins - 1] += 1;
+		}
+
+		// scoreBins[cvName].push(((tmpScores.reduce((prev, curr) => curr += prev)) / tmpScores.length));
+	}
+
+	var obsPercent = {}
+
+	for (var ci = 0; ci < classValList.length; ci++) {
+		cvName = classValList[ci];
+		cvName = cvName.toString();
+
+		obsPercent[cvName] = [];
+
+		for (var i = 0; i < positiveBins[cvName].length; i++) {
+			var newPercent = positiveBins[cvName][i] / counts[cvName][i];
+			obsPercent[cvName].push(newPercent);
+		}
+	}
+
+	// return { "scoreBins": scoreBins, "positiveBins": positiveBins, "negativeBins": negativeBins, "counts": counts };
+	return obsPercent;
 }
 
 
