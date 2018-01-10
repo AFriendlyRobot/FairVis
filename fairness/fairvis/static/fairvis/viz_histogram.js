@@ -27,8 +27,10 @@ var BAR_WIDTH = (HISTOGRAM_WIDTH - 20) / NUM_BUCKETS;
 // Padding on left; needed within SVG so annotations show up.
 var LEFT_PAD = 10;
 
-// Colors of categories of items.
+// colors
 var CATEGORY_COLORS = ['#039', '#c70'];
+var PIE_COLORS = [['#686868', '#ccc','#039', '#92a5ce'],
+                  ['#686868', '#ccc','#c70',  '#f0d6b3']];
 
 
 function draw_histogram() {
@@ -104,9 +106,16 @@ function histogram_main() {
 	document.getElementById('predictive-parity').onclick = optimizer.predictiveParity; 
 	document.getElementById('error-rate-balance').onclick = optimizer.errorRateBalance; 
 
-	// TODO: make correctness matrices?
+	// TODO
+	/*
+	// Make correctness matrices.
+	createCorrectnessMatrix('correct0', comparisonExample0);
+	createCorrectnessMatrix('correct1', comparisonExample1);
 
-	// TODO: create pie charts? 
+	// Create pie charts
+	createRatePies('pies0', comparisonExample0, PIE_COLORS[0], true);
+	createRatePies('pies1', comparisonExample1, PIE_COLORS[1], true);
+	*/
 
 	// make histograms & legends
 	createHistogram('histogram0', comparisonExample0, false, false);
@@ -115,6 +124,10 @@ function histogram_main() {
 	createHistogramLegend('histogram-legend1', 1);
 
 	// TODO: update micro-story annotations for each definition 
+	comparisonExample0.classify(0.5);
+	comparisonExample1.classify(0.5);
+	comparisonExample0.notifyListeners();
+	comparisonExample1.notifyListeners();
 }
 
 function createHistogram(id, model, noThreshold, includeAnnotation) {
@@ -292,7 +305,136 @@ function createHistogramLegend(id, category) {
       .attr('y', boxSide - textPad)
       .attr('text-anchor', 'start')
       .attr('class', 'legend-label');
+}
 
+// Create two pie charts: 1. for all classification rates
+// and 2. true positive rates.
+function createRatePies(id, model, palette, includeAnnotations) {
+  var width = 300;
+  var lx = 0;
+  var height = 170;
+  var svg = d3.select('#' + id).append('svg')
+    .attr('width', width)
+    .attr('height', height);
+  // Add a little margin so the annotation rectangle
+  // around "True Positive Rate" doesn't get cut off.
+  svg = svg.append('g').attr('transform', 'translate(10,0)');
+  var tprColors = [palette[0], palette[2]];
+  var cy = 120;
+  var tprPie = createPie('tpr-' + id, [1,1], tprColors, svg, 45, cy, 40);
+  var allPie = createPie('all-' + id, [1,1,1,1], palette, svg, 195, cy, 40);
+  var topY = 35;
+
+  var tprLabel = createPercentLabel(svg, lx, topY, 'True Positive Rate',
+      'pie-label', 'pie-number');
+  var posLabel = createPercentLabel(svg, width / 2, topY, 'Positive Rate',
+      'pie-label', 'pie-number');
+
+  // Add annotation labels, if requested:
+  if (includeAnnotations) {
+    // var tprAnnotation = svg.append('rect')
+    //     .attr('class', 'annotation equal-opportunity-annotation')
+    //     .attr('x', -8)
+    //     .attr('y', 14)
+    //     .attr('rx', 20)
+    //     .attr('ry', 20)
+    //     .attr('width', width / 2 - 10)
+    //     .attr('height', 30);
+    // var posAnnotation = svg.append('rect')
+    //     .attr('class', 'annotation demographic-parity-annotation')
+    //     .attr('x', width / 2 - 10)
+    //     .attr('y', 14)
+    //     .attr('rx', 20)
+    //     .attr('ry', 20)
+    //     .attr('width', width / 2 - 30)
+    //     .attr('height', 30);
+  }
+
+  model.addListener(function() {
+    var items = model.items;
+    tprPie([countMatches(items, 1, 0),
+            countMatches(items, 1, 1)]);
+    allPie([countMatches(items, 1, 0), countMatches(items, 0, 0),
+            countMatches(items, 1, 1), countMatches(items, 0, 1)]);
+    tprLabel(model.tpr);
+    posLabel(model.positiveRate);
+  });
+}
+
+// Create a pie chart.
+function createPie(id, values, colors, svg, ox, oy, radius) {
+  var angles = [];
+  function makeAngles(values) {
+    var total = 0;
+    for (var i = 0; i < values.length; i++) {
+      total += values[i];
+    }
+    var sum = 0;
+    for (var i = 0; i < values.length; i++) {
+      var start = 2 * Math.PI * sum / total;
+      sum += values[i];
+      var end = 2 * Math.PI * sum / total;
+      angles[i] = [start, end];
+    }
+  }
+  makeAngles(values);
+  var slices = svg.selectAll('.slice-' + id);
+  function makeArc(d) {
+    return d3.arc()
+      .innerRadius(0)
+      .outerRadius(radius)
+      .startAngle(d[0]).endAngle(d[1])();
+  }
+  slices.data(angles).enter().append('path')
+    .attr('class', 'slice-' + id)
+    .attr('d', makeArc)
+    .attr('fill', function(d, i) {return colors[i]})
+    .attr('transform', 'translate(' + ox + ',' + oy + ')');
+  return function(newValues) {
+    makeAngles(newValues);
+    svg.selectAll('.slice-' + id)
+        .data(angles)
+        .attr('d', makeArc);
+  }
+}
+
+// Creates matrix view of dots representing correct and
+// incorrect items.
+function createCorrectnessMatrix(id, model) {
+  var width = 300;
+  var height = 170;
+  var correct, incorrect;
+  function layout() {
+    correct = model.items.filter(function(item) {
+      return item.value == item.predicted;
+    });
+    incorrect = model.items.filter(function(item) {
+      return item.value != item.predicted;
+    });
+    gridLayout(correct, 2, 80);
+    gridLayout(incorrect, width / 2 + 4, 80);
+  }
+
+  layout();
+  var svg = createIcons(id, model.items, width, height, LEFT_PAD);
+
+  var topY = 18;
+  var correctLabel = createPercentLabel(svg, 0, topY, 'Correct',
+      'pie-label', 'pie-number');
+  var incorrectLabel = createPercentLabel(svg, width / 2 + 4, topY, 'Incorrect',
+      'pie-label', 'pie-number');
+
+  // Add explanation of correct decisions.
+  explanation(svg, ['Accuracy'], 0, topY);
+  explanation(svg, ['1 - Accuracy'], width / 2 + 4, topY);
+
+  // Add explanation of incorrect
+  model.addListener(function() {
+    layout();
+    correctLabel(correct.length / model.items.length);
+    incorrectLabel(incorrect.length / model.items.length);
+    svg.selectAll('.icon').call(defineIcon);
+  });
 }
 
 
@@ -414,11 +556,19 @@ function positiveRate(items) {
   return totalPos / items.length;
 }
 
+// Count specified type of items.
+function countMatches(items, value, predicted) {
+  var n = 0;
+  items.forEach(function(item) {
+    if (item.value == value && item.predicted == predicted) {
+      n++;
+    }
+  });
+  return n;
+}
+
 function getGroupOptions(colName) {
 	var opts = []; 
-	// get index of group 
-	// var indexOfCol = json.colNames.indexOf(colName);
-	// console.log(indexOfCol);
 
 	data.forEach(function(d) {
 		if(!opts.includes(d.data[colName])) {
@@ -445,11 +595,11 @@ function populate_groups() {
 }
 
 // Bar related functions & vars
-function getBarColor(d) {
+function getColor(d) {
 	return d.predicted == 0 ? '#555' : CATEGORY_COLORS[d.group];
 }
 
-function getBarOpacity(d) {
+function getOpacity(d) {
 	return .3 + .7 * d.trueVal;
 } 
 
@@ -479,8 +629,8 @@ function defineBar(selection) {
   selection
   	.attr('class', 'bar')
   	//.attr('stroke', function(d) { return getBarColor(d); })
-  	.attr('fill', getBarColor)
-  	.attr('fill-opacity', getBarOpacity)
+  	.attr('fill', getColor)
+  	.attr('fill-opacity', getOpacity)
   	//.attr('stroke-opacity', function(d) { return d.opacity; })
   	.attr('x', function(d) { return xMap(d.x); })
   	.attr('y', function(d) { return yMap(d.y); })
@@ -622,5 +772,56 @@ function copyItems(items) {
     var copy = new Item(item.category, item.value, item.score, item.trueVal);
     copy.predicted = item.predicted;
     return copy;
+  });
+}
+
+function createIcons(id, items, width, height, pad) {
+  var svg = d3.select('#' + id).append('svg')
+    .attr('width', width)
+    .attr('height', height);
+  if (pad) {
+    svg = svg.append('g').attr('transform', 'translate(' + pad + ',0)');
+  }
+  var icon = svg.selectAll('.icon')
+    .data(items)
+  .enter().append('circle')
+    .call(defineIcon);
+  return svg;
+}
+
+// Icon for a person in histogram or correctness matrix.
+function defineIcon(selection) {
+  selection
+    .attr('class', 'icon')
+    .attr('stroke', getColor)
+    .attr('fill', getColor)
+    .attr('fill-opacity', getOpacity)
+    .attr('stroke-opacity', function(d) {return .4 + .6 * d.value;})
+    .attr('cx', function(d) {return d.x + d.side / 2;})
+    .attr('cy', function(d) {return d.y + d.side / 2;})
+    .attr('r', function(d) {return d.side * .4});
+}
+
+// Create a nice label for percentages; the return value is a callback
+// to update the number.
+function createPercentLabel(svg, x, y, text, labelClass, statClass) {
+  var label = svg.append('text').text(text)
+      .attr('x', x).attr('y', y).attr('class', labelClass);
+  var labelWidth = label.node().getComputedTextLength();
+  var stat = svg.append('text').text('')
+      .attr('x', x + labelWidth + 4).attr('y', y).attr('class', statClass);
+
+  // Return a function that updated the label.
+  return function(value) {
+    var formattedValue = Math.round(100 * value) + '%';
+    stat.text(formattedValue);
+  }
+}
+
+// Helper for multiline explanations.
+function explanation(svg, lines, x, y) {
+  lines.forEach(function(line) {
+    svg.append('text').text(line)
+        .attr('x', x).attr('y', y += 16).attr('class', 'explanation');
   });
 }
