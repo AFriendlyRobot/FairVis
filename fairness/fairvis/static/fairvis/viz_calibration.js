@@ -2,8 +2,8 @@ var cal_settings = {};
 var cal_data = {};
 
 
-var CAL_PLOT_WIDTH = 800;
-var CAL_PLOT_HEIGHT = 600;
+var CAL_PLOT_WIDTH = 700;
+var CAL_PLOT_HEIGHT = 500;
 
 
 function calibration_initialize() {
@@ -17,7 +17,7 @@ function calibration_initialize() {
 	var mname;
 
 	// Initialize options for selecting protected field
-	for (var i = 0; i < json.colNames.length; i++) {
+	for (var i = 0; i < json.colNames.length - 1; i++) {
 		cname = json.colNames[i];
 		newOpt  = "<option class=\"calibration-protected-feature-option\" value=\"";
 		newOpt += cname + "\">" + cname + "</option>";
@@ -50,12 +50,20 @@ function calibration_initialize() {
 function draw_calibration() {
 	var cal_svg = d3.select("#calibration-svg"),
 		cmargin = { top: 20, right: 20, bottom: 30, left: 40 },
-		cwidth = +svg.attr("width") - margin.left - margin.right,
-		cheight = +svg.attr("height") - margin.top - margin.bottom,
-		g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+		cwidth = CAL_PLOT_WIDTH - cmargin.left - cmargin.right,
+		cheight = CAL_PLOT_HEIGHT - cmargin.top - cmargin.bottom,
+		g = cal_svg.append("g").attr("transform", "translate(" + cmargin.left + "," + cmargin.top + ")");
 
-	svg.attr("width", CAL_PLOT_WIDTH);
-	svg.attr("height", CAL_PLOT_HEIGHT);
+	cal_svg.attr("width", CAL_PLOT_WIDTH);
+	cal_svg.attr("height", CAL_PLOT_HEIGHT);
+
+	var featureName = $("#calibration-protected-selection").val().toString();
+	var scoreName = $("#calibration-prediction-selection").val().toString();
+	var numBins = parseInt($("#calibration-num-bins").val());
+	var binnedData = binnedAccuraciesByAttribute(featureName, scoreName, numBins);
+	var barPoints = binnedData["pts"];  // [{ binIndex: i, cvName: obsPercent, cvName: obsPercent, . . . }, . . . ]
+	// var classOptions = Object.keys(binnedData);
+	var keys = binnedData["cvOptions"];
 
 	var cx0 = d3.scaleBand()
 	            .rangeRound([0, cwidth])
@@ -67,15 +75,72 @@ function draw_calibration() {
 	var cy = d3.scaleLinear()
 	           .rangeRound([cheight, 0]);
 
+	// var ccolorMap = d3.scaleLinear()
+	//                   .domain(keys)
+	//                   .range("hsl(215,100%,80%)", "hsl(215,70%,50%)")
+	//                   .interpolate(d3.interpolateHcl);
+
 	var ccolorMap = d3.scaleLinear()
-	                  .domain([0, calNumClassOptions()])
-	                  .range("hsl(215,70%,50%)", "hsl(215,100%,80%)")
+	                  .domain(keys)
+	                  .range(["hsl(215, 100%, 80%)", "hsl(215, 70%, 50%)"])
 	                  .interpolate(d3.interpolateHcl);
 
-	var featureName = $("#calibration-protected-selection").val().toString();
-	var scoreName = $("#calibration-prediction-selection").val().toString();
-	var numBins = parssInt($("#calibration-num-bins").val());
-	var binnedData = binnedAccuraciesByAttribute(featureName, scoreName, numBins);
+	// var cxaxis = d3.svg.axis().scale(cx0).orient("bottom");
+
+	// var cyaxis = d3.svg.axis().scale(cy).orient("left").ticks(10);
+
+	cx0.domain(barPoints.map(function(d) { return d.binIndex }));
+	cx1.domain(keys).rangeRound([0, cx0.bandwidth()]);
+	cy.domain([0,1.0]).nice();
+
+	g.append("g").selectAll("g").data(barPoints)
+	             .enter().append("g")
+	             .attr("transform", function(d) { return "translate(" + cx0(d.binIndex) + ",0)"; })
+	             .selectAll("rect")
+	             .data(function(d) { return keys.map(function(key) { return { key: key, value: d[key] }; }); })
+	             .enter().append("rect")
+	             .attr("x", function(d) { return cx1(d.key); })
+	             .attr("y", function(d) { return cy(d.value); })
+	             .attr("width", cx1.bandwidth())
+	             .attr("height", function(d) { return cheight - cy(d.value); })
+	             .attr("fill", function(d) { console.log(d); console.log(ccolorMap); console.log(ccolorMap(d.key)); return ccolorMap(d.key); });
+
+	g.append("g").attr("class", "axis")
+	             .attr("transform", "translate(0," + cheight + ")")
+	             .call(d3.axisBottom(cx0));
+
+	g.append("g").attr("class", "axis")
+	             .call(d3.axisLeft(cy).ticks(null, "s"))
+	             .append("text")
+	             .attr("x", 2)
+	             .attr("y", cy(cy.ticks().pop()) + 0.5)
+	             .attr("dy", "0.32em")
+	             .attr("fill", "#000")
+	             .attr("font-weight", "bold")
+	             .attr("text-anchor", "start")
+	             .text("Observed % Where target=1");
+
+	var legend = g.append("g")
+	              .attr("font-family", "sans-serif")
+	              .attr("font-size", 10)
+	              .attr("text-anchor", "end")
+	              .selectAll("g")
+	              .data(keys.slice().reverse())
+	              .enter().append("g")
+	              .attr("transform", function(d,i) { return "translate(0," + i * 20 + ")"; });
+
+	legend.append("rect")
+	      .attr("x", cwidth-19)
+	      .attr("width", 19)
+	      .attr("height", 19)
+	      .attr("fill", ccolorMap);
+
+	legend.append("text")
+	      .attr("x", cwidth - 24)
+	      .attr("y", 9.5)
+	      .attr("dy", "0.32em")
+	      .text(function(d) { return d; });
+
 }
 
 
@@ -185,8 +250,38 @@ function binnedAccuraciesByAttribute(featureName, scoreName, numBins) {
 		}
 	}
 
+	var retPoints = [];
+
+	// for (var ci = 0; ci < classValList.length; ci++) {
+	// 	cvName = classValList[ci];
+	// 	cvName = cvName.toString();
+
+	// 	for (var i = 0; i < positiveBins[cvName].length; i++) {
+	// 		var newPoint = {};
+	// 		newPoint["binIndex"] = i;
+	// 		newPoint["classVal"] = cvName;
+	// 		newPoint["obsPercent"] = obsPercent[cvName][i];
+
+	// 		retPoints.push(newPoint);
+	// 	}
+	// }
+
+	for (var i = 0; i < numBins; i++) {
+		var newPt = {}
+		newPt["binIndex"] = i;
+		for (var ci = 0; ci < classValList.length; ci++) {
+			cvName = classValList[ci];
+			cvName = cvName.toString();
+
+			newPt[cvName] = obsPercent[cvName][i];
+		}
+
+		retPoints.push(newPt);
+	}
+
 	// return { "scoreBins": scoreBins, "positiveBins": positiveBins, "negativeBins": negativeBins, "counts": counts };
-	return obsPercent;
+	// return obsPercent;
+	return { "pts": retPoints, "cvOptions": classValList };
 }
 
 
