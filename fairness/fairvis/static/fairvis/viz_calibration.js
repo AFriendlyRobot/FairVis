@@ -48,6 +48,7 @@ function calibration_initialize() {
 // Ref: https://bl.ocks.org/mbostock/3885304
 // Ref: https://bl.ocks.org/mbostock/3887051
 function draw_calibration() {
+	$("#calibration-svg").empty();
 	var cal_svg = d3.select("#calibration-svg"),
 		cmargin = { top: 20, right: 20, bottom: 30, left: 40 },
 		cwidth = CAL_PLOT_WIDTH - cmargin.left - cmargin.right,
@@ -103,7 +104,7 @@ function draw_calibration() {
 	             .attr("y", function(d) { return cy(d.value); })
 	             .attr("width", cx1.bandwidth())
 	             .attr("height", function(d) { return cheight - cy(d.value); })
-	             .attr("fill", function(d) { console.log(d); console.log(ccolorMap); console.log(ccolorMap(d.key)); return ccolorMap(d.key); });
+	             .attr("fill", function(d) { return ccolorMap(d.key); });
 
 	g.append("g").attr("class", "axis")
 	             .attr("transform", "translate(0," + cheight + ")")
