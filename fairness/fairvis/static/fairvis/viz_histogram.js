@@ -1,19 +1,28 @@
 var data; 
-var thresholdGlobal = 0.5;
+var thresholdGlobal;
+var scalar; 
+var barData; 
+
 // Side of grid in histograms and correctness matrices.
-var SIDE = 7;
+var SIDE = 110;
 
 var POSITIVE = 1; 
 var NEGATIVE = 0;
+var TRUE_POSITIVE = "TF"; 
+var TRUE_NEGATIVE = "TN";
+var FALSE_POSITIVE = "FP";
+var FALSE_NEGATIVE = "FN";
 
 // Component dimensions.
-var HEIGHT = 250;
+var HEIGHT = 500;
+var HISTOGRAM_HEIGHT = HEIGHT - 16;
 var HISTOGRAM_WIDTH = 370;
 var HISTOGRAM_LEGEND_HEIGHT = 60;
 
 // Histogram bucket width
-var HISTOGRAM_BUCKET_SIZE = 0.02;
-var numBuckets = 1 / HISTOGRAM_BUCKET_SIZE;
+var HISTOGRAM_BUCKET_SIZE = 0.04;
+var NUM_BUCKETS = 1 / HISTOGRAM_BUCKET_SIZE;
+var BAR_WIDTH = (HISTOGRAM_WIDTH - 20) / NUM_BUCKETS;
 
 // Padding on left; needed within SVG so annotations show up.
 var LEFT_PAD = 10;
@@ -27,9 +36,11 @@ function draw_histogram() {
 	$("#histogram1").empty();
 	$("#histogram-legend0").empty();
 	$("#histogram-legend1").empty();
+	thresholdGlobal = 0.5;
+	scalar = null;
+	barData = [[], []];
 	histogram_main(); 
 }
-
 
 function histogram_initialize() {
 	data = json.dataPoints;
@@ -81,7 +92,10 @@ function histogram_main() {
 	var comparisonExample0 = new GroupModel(groups[0], tprValue, fprValue);
 	var comparisonExample1 = new GroupModel(groups[1], tprValue, fprValue);
 
-	var optimizer = Optimizer(comparisonExample0, comparisonExample1, 1); 
+	// TODO: change this
+	var fairnessDef0 = new GroupModel(groups[1], tprValue, fprValue);
+	var fairnessDef1 = new GroupModel(groups[1], tprValue, fprValue);
+	var optimizer = Optimizer(fairnessDef0, fairnessDef1, 1); 
 
 	// to switch among definitions
 	document.getElementById('statistical-parity').onclick = optimizer.statisticalParity; 
@@ -113,7 +127,8 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 
 	// Icons
 	//var numBuckets = 20;
-	var pedestalWidth = numBuckets * SIDE;
+	var SIDE = (HISTOGRAM_WIDTH - 20) / NUM_BUCKETS;
+	var pedestalWidth = NUM_BUCKETS * SIDE;
 	var hx = (width - pedestalWidth) / 2;
 	var scale = d3.scaleLinear().range([hx, hx + pedestalWidth]).
 	domain([0, 1]);
@@ -133,7 +148,6 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 
 	histogramLayout(items, hx, bottom, SIDE, 0.0, 1.0, HISTOGRAM_BUCKET_SIZE);
 	//var svg = createIcons(id, items, width, height);
-	console.log(thresholdGlobal);
 	var svg = createBars(id, items, width, height, thresholdGlobal);
 
 	var tx = width / 2;
@@ -188,7 +202,7 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 		if (includeAnnotation) {
 			thresholdAnnotation.attr('x', tx - annotationW / 2);
 		}
-		svg.selectAll('.icon').call(defineIcon);
+		svg.selectAll('.bar').call(defineBar);
 	}
 	var drag = d3.drag()
 	.on('drag', function() {
@@ -204,9 +218,19 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 	});
 	svg.call(drag);
 	model.addListener(function(event) {
+		// update bars
+		var groupID = items[0].category;
+		var thisBarData = barData[groupID]; 
+		for (var i = 0; i < thisBarData.length; i++) {
+			thisBarData[i].predicted = thisBarData[i].flooredScore >= model.threshold ? 1 : 0;
+		}
+		barData[groupID] = thisBarData;
+
+		// update items 
 		for (var i = 0; i < items.length; i++) {
 			items[i].predicted = items[i].score >= model.threshold ? 1 : 0;
 		}
+
 		setThreshold(model.threshold, event == 'histogram-drag');
 	});
 }
@@ -357,9 +381,9 @@ function makeItemsFor2Groups(fieldName, groupName1, groupName2, modelName) {
 
 	data.forEach(function(d) {
 		if (d.data[fieldName].toString() == groupName1) {
-			group1.push(new Item(1, -111, d.scores[modelName], d.trueVal)); 
+			group1.push(new Item(0, -111, d.scores[modelName], d.trueVal)); 
 		} else if (d.data[fieldName].toString() == groupName2) {
-			group2.push(new Item(2, -111, d.scores[modelName], d.trueVal));
+			group2.push(new Item(1, -111, d.scores[modelName], d.trueVal));
 		}
 	});
 
@@ -420,118 +444,104 @@ function populate_groups() {
 	$("#group2Selection").val(options[1]);
 }
 
+// Bar related functions & vars
+function getBarColor(d) {
+	return d.predicted == 0 ? '#555' : CATEGORY_COLORS[d.group];
+}
+
+function getBarOpacity(d) {
+	return .3 + .7 * d.trueVal;
+} 
+
 function itemColor(category, predicted) {
   return predicted == 0 ? '#555' : CATEGORY_COLORS[category];
 }
 
 function itemOpacity(value) {
-  return .3 + .7 * value*100;
+  return .3 + .7 * value;
 }
 
-function iconColor(d) {
-  return d.predicted == 0 && !d.colored ? '#555' : CATEGORY_COLORS[d.category];
-}
-
-function iconOpacity(d) {
-  return itemOpacity(d.value);
-}
-
-// Icon for a person in histogram or correctness matrix.
-function defineIcon(selection) {
-  selection
-    .attr('class', 'icon')
-    .attr('stroke', iconColor)
-    .attr('fill', iconColor)
-    .attr('fill-opacity', 1)
-    .attr('stroke-opacity', function(d) {return .4 + .6 * d.value;})
-    .attr('cx', function(d) {return d.x + d.side / 2; })
-    .attr('cy', function(d) {return d.y + d.side / 2; })
-    .attr('r', function(d) {return d.side * .4});
-}
-
-function createIcons(id, items, width, height, pad) {
-  var svg = d3.select('#' + id).append('svg')
-    .attr('width', width)
-    .attr('height', height);
-  if (pad) {
-    svg = svg.append('g').attr('transform', 'translate(' + pad + ',0)');
-  }
-
-  var icon = svg.selectAll('.icon')
-    .data(items)
-  .enter().append('circle')
-    .call(defineIcon);
-
-  return svg;
+var Bar = function(group, predicted, trueVal, score, count, x, y) {
+	this.group = group; 
+	this.flooredScore = score 
+	this.predicted = predicted; 
+	this.trueVal = trueVal;
+	this.count = count;
+	//this.color = getBarColor(this); 
+	//this.opacity = getBarOpacity(this); 
+	this.w = BAR_WIDTH; 
+	this.h = count;
+	this.x = x; 
+	this.y = y; 
 }
 
 function defineBar(selection) {
-  selection 
+  selection
   	.attr('class', 'bar')
-  	.attr('stroke', barColor)
-  	.attr('fill', barColor)
-  	// TODO: change opacity to be a function
-  	.attr('fill-opacity', 0.5)
-  	.attr('stroke-opacity', 0.5)
-  	.attr('x', )
-  	.attr('y', )
-  	.attr('width', )
-  	.attr('height', ); 
+  	//.attr('stroke', function(d) { return getBarColor(d); })
+  	.attr('fill', getBarColor)
+  	.attr('fill-opacity', getBarOpacity)
+  	//.attr('stroke-opacity', function(d) { return d.opacity; })
+  	.attr('x', function(d) { return xMap(d.x); })
+  	.attr('y', function(d) { return yMap(d.y); })
+  	.attr('width', function(d) { return d.w; })
+  	.attr('height', function(d) {return hScale(d.h); }) 
+
+  	// TODO: set these
+	function xMap(index) { return index * BAR_WIDTH; }
+	function yMap(index) { return HISTOGRAM_HEIGHT-hScale(index); }
+	function hScale(h) { return scalar(h); }
 }
 
-
-
 function createBars(id, items, width, height, threshold) {
-  var groupedItems = groupItems(items, threshold); 
-  var tn = groupedItems[0];
-  var fn = groupedItems[1]; 
-  var tp = groupedItems[2];
-  var fp = groupedItems[3];
+  var barData = getBarData(items, threshold); 
 
-  console.log(tn);
-  console.log(fn);
-  console.log(tp);
-  console.log(fp);
+  //console.log(barData);
 
   // initialize svg for bars
   var svg = d3.select('#' + id).append('svg')
     .attr('width', width)
     .attr('height', height);
 
-  // drawing bottom bars
-  
+  var bars = svg.selectAll('.bars').data(barData).enter()
+  	.append('rect').call(defineBar); 
 
   return svg; 
 }
 
-function groupItems(items, threshold) {
+function getBarData(items, threshold) {
+	var thisBarData = []; 
 	var tn = [];
 	var fn = []; 
 	var fp = []; 
     var tp = []; 
+    var combinedCnt = [];
+    var groupID = items[0].category;
     var numNegBuckets = Math.ceil(threshold/HISTOGRAM_BUCKET_SIZE);
-    var numPosBuckets = numBuckets - numNegBuckets;
+    var numPosBuckets = NUM_BUCKETS - numNegBuckets;
 
 	// initialize 2 negative arrays 
 	for (var i = 0; i < numNegBuckets; ++i) {
 		tn.push(0); 
 		fn.push(0);
+		combinedCnt.push(0);
 	}
 	// initialize 2 positive arrays
 	for (var i = 0; i < numPosBuckets; ++i) {
 		fp.push(0); 
 		tp.push(0);
+		combinedCnt.push(0);
 	}
 
 	items.forEach(function(d) {
   	// check left/right to threshold 
 	  	var index = Math.floor(d.score/HISTOGRAM_BUCKET_SIZE); 
-	  	if (index >= numBuckets)
-	  		index = numBuckets-1;
+	  	if (index >= NUM_BUCKETS)
+	  		index = NUM_BUCKETS-1;
 	  	else if (index < 0)
 	  		index = 0;
 	  	//console.log(index);
-
+	  	++combinedCnt[index];
 	  	if (d.score < threshold) {
 			// check negative/positive
 			if (d.trueVal == POSITIVE) {
@@ -552,8 +562,46 @@ function groupItems(items, threshold) {
 		}
 	});
 
+	// push negatives in barData
+	for (var i = 0; i < tn.length; ++i) {
+		if (tn[i] != 0) {
+			//(group, predicted, trueVal, score, count, x, y)
+			var currBar = new Bar(groupID, 0, 0, i * HISTOGRAM_BUCKET_SIZE, 
+				tn[i], i, tn[i]+fn[i]); 
+			thisBarData.push(currBar);
+		}
 
-	return [tn, fn, tp, fp];
+		if (fn[i] != 0) {
+			//(group, predicted, trueVal, count, x, y)
+			var currBar = new Bar(groupID, 0, 1, i * HISTOGRAM_BUCKET_SIZE,
+				fn[i], i, fn[i]); 
+			thisBarData.push(currBar);
+		}
+	}
+
+	for (var i = 0; i < tp.length; ++i) {
+		if (tp[i] != 0) {
+			var currBar = new Bar(groupID, 1, 1, (i+tn.length) * HISTOGRAM_BUCKET_SIZE,
+				tp[i], i+tn.length, tp[i]); 
+			thisBarData.push(currBar);
+		}
+
+		if (fp[i] != 0) {
+			var currBar = new Bar(groupID, 1, 0, (i+tn.length) * HISTOGRAM_BUCKET_SIZE,
+				fp[i], i+tn.length, tp[i]+fp[i]); 
+			thisBarData.push(currBar);
+		}
+	}
+
+	// update barData
+	barData[groupID] = thisBarData;
+
+	// set scalar
+	scalar = d3.scaleLinear()
+		.domain([0, Math.max.apply(Math, combinedCnt)])
+		.range([0, HISTOGRAM_HEIGHT-50]);
+
+	return thisBarData;
 }
 
 function gridLayout(items, x, y) {
