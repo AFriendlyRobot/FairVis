@@ -86,6 +86,8 @@ def upload_data(request):
                 new_point['scores']['rforest'] = max(min(1, float(full_data['rforestScore'][i])), 0)
                 if 'predictfile' in request.FILES:
                     new_point['scores'][user_score_name] = float(predictions[i])
+            else:
+                new_point['scores'] = []
             new_point['trueVal'] = float(new_data[-1])
             if predictions:
                 new_point['userPredicted'] = predictions[i]
