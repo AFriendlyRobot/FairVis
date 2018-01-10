@@ -1,6 +1,10 @@
 var data; 
+var thresholdGlobal = 0.5;
 // Side of grid in histograms and correctness matrices.
 var SIDE = 7;
+
+var POSITIVE = 1; 
+var NEGATIVE = 0;
 
 // Component dimensions.
 var HEIGHT = 250;
@@ -9,6 +13,7 @@ var HISTOGRAM_LEGEND_HEIGHT = 60;
 
 // Histogram bucket width
 var HISTOGRAM_BUCKET_SIZE = 0.02;
+var numBuckets = 1 / HISTOGRAM_BUCKET_SIZE;
 
 // Padding on left; needed within SVG so annotations show up.
 var LEFT_PAD = 10;
@@ -29,7 +34,7 @@ function draw_histogram() {
 function histogram_initialize() {
 	data = json.dataPoints;
 	var colNames = json.colNames;
-	var modelNames = Object.keys(data[0].predictions);
+	var modelNames = Object.keys(data[0].scores);
 
 	// populate options for protected field selection
 	var newOpts
@@ -107,7 +112,6 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 	var items = copyItems(model.items);
 
 	// Icons
-	var numBuckets = 1 / HISTOGRAM_BUCKET_SIZE;
 	//var numBuckets = 20;
 	var pedestalWidth = numBuckets * SIDE;
 	var hx = (width - pedestalWidth) / 2;
@@ -128,8 +132,9 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 	}
 
 	histogramLayout(items, hx, bottom, SIDE, 0.0, 1.0, HISTOGRAM_BUCKET_SIZE);
-	var svg = createIcons(id, items, width, height);
-	//var svg = createBars(id, items, width, height);
+	//var svg = createIcons(id, items, width, height);
+	console.log(thresholdGlobal);
+	var svg = createBars(id, items, width, height, thresholdGlobal);
 
 	var tx = width / 2;
 	var topY = 60;
@@ -190,6 +195,7 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 		var oldTx = tx;
 		tx += d3.event.dx;
 		var t = scale.invert(tx);
+		thresholdGlobal = t;
 		setThreshold(t, true);
 		if (tx != oldTx) {
 			model.classify(t);
@@ -300,13 +306,13 @@ function Optimizer(model0, model1, stepSize) {
 }
 
 // an item = a datapoint 
-var Item = function(category, value, score) {
+var Item = function(category, predicted, score, trueVal) {
   // real class
   this.category = category;
-  // intrinsic value
-  this.value = value;
+  // true value
+  this.trueVal = trueVal;
   // predicted class 
-  this.predicted = value;
+  this.predicted = predicted;
   // prediction score 
   this.score = score;
 };
@@ -351,9 +357,9 @@ function makeItemsFor2Groups(fieldName, groupName1, groupName2, modelName) {
 
 	data.forEach(function(d) {
 		if (d.data[fieldName].toString() == groupName1) {
-			group1.push(new Item(1, -111, d.predictions[modelName])); 
+			group1.push(new Item(1, -111, d.scores[modelName], d.trueVal)); 
 		} else if (d.data[fieldName].toString() == groupName2) {
-			group2.push(new Item(2, -111, d.predictions[modelName]));
+			group2.push(new Item(2, -111, d.scores[modelName], d.trueVal));
 		}
 	});
 
@@ -398,15 +404,6 @@ function getGroupOptions(colName) {
 	return opts;
 }
 
-function getModelNames() {
-	var models = [];
-
-	data[0].predictions.forEach(function(k, v) {
-		models.push(k); 
-	})
-	return models;
-}
-
 function populate_groups() {
 	var options = getGroupOptions($("#protectedSelection").val());
 	var newOpts
@@ -441,15 +438,14 @@ function iconOpacity(d) {
 
 // Icon for a person in histogram or correctness matrix.
 function defineIcon(selection) {
-	console.log("fhh");
   selection
     .attr('class', 'icon')
     .attr('stroke', iconColor)
     .attr('fill', iconColor)
     .attr('fill-opacity', 1)
     .attr('stroke-opacity', function(d) {return .4 + .6 * d.value;})
-    .attr('cx', function(d) {console.log(d.x + d.side / 2); return d.x + d.side / 2; })
-    .attr('cy', function(d) {console.log(d.y + d.side / 2); return d.y + d.side / 2; })
+    .attr('cx', function(d) {return d.x + d.side / 2; })
+    .attr('cy', function(d) {return d.y + d.side / 2; })
     .attr('r', function(d) {return d.side * .4});
 }
 
@@ -460,18 +456,104 @@ function createIcons(id, items, width, height, pad) {
   if (pad) {
     svg = svg.append('g').attr('transform', 'translate(' + pad + ',0)');
   }
+
   var icon = svg.selectAll('.icon')
     .data(items)
   .enter().append('circle')
     .call(defineIcon);
+
   return svg;
 }
 
-function createBars(id, items, width, height) {
+function defineBar(selection) {
+  selection 
+  	.attr('class', 'bar')
+  	.attr('stroke', barColor)
+  	.attr('fill', barColor)
+  	// TODO: change opacity to be a function
+  	.attr('fill-opacity', 0.5)
+  	.attr('stroke-opacity', 0.5)
+  	.attr('x', )
+  	.attr('y', )
+  	.attr('width', )
+  	.attr('height', ); 
+}
+
+
+
+function createBars(id, items, width, height, threshold) {
+  var groupedItems = groupItems(items, threshold); 
+  var tn = groupedItems[0];
+  var fn = groupedItems[1]; 
+  var tp = groupedItems[2];
+  var fp = groupedItems[3];
+
+  console.log(tn);
+  console.log(fn);
+  console.log(tp);
+  console.log(fp);
+
+  // initialize svg for bars
   var svg = d3.select('#' + id).append('svg')
     .attr('width', width)
     .attr('height', height);
 
+  // drawing bottom bars
+  
+
+  return svg; 
+}
+
+function groupItems(items, threshold) {
+	var tn = [];
+	var fn = []; 
+	var fp = []; 
+    var tp = []; 
+    var numNegBuckets = Math.ceil(threshold/HISTOGRAM_BUCKET_SIZE);
+    var numPosBuckets = numBuckets - numNegBuckets;
+
+	// initialize 2 negative arrays 
+	for (var i = 0; i < numNegBuckets; ++i) {
+		tn.push(0); 
+		fn.push(0);
+	}
+	// initialize 2 positive arrays
+	for (var i = 0; i < numPosBuckets; ++i) {
+		fp.push(0); 
+		tp.push(0);
+	}
+
+	items.forEach(function(d) {
+  	// check left/right to threshold 
+	  	var index = Math.floor(d.score/HISTOGRAM_BUCKET_SIZE); 
+	  	if (index >= numBuckets)
+	  		index = numBuckets-1;
+	  	else if (index < 0)
+	  		index = 0;
+	  	//console.log(index);
+
+	  	if (d.score < threshold) {
+			// check negative/positive
+			if (d.trueVal == POSITIVE) {
+				// false negative
+				++fn[index];
+			} else if (d.trueVal == NEGATIVE) {
+				++tn[index];
+			} else { console.log("error"); }
+		} else {
+			// check negative/positive
+			if (d.trueVal == POSITIVE) {
+				// true positive 
+				++tp[index-numNegBuckets]; 
+			} else if (d.trueVal == NEGATIVE) {
+				// false positive
+				++fp[index-numNegBuckets];
+			} else { console.log("error"); }
+		}
+	});
+
+
+	return [tn, fn, tp, fp];
 }
 
 function gridLayout(items, x, y) {
@@ -489,7 +571,7 @@ function gridLayout(items, x, y) {
 // Shallow copy of item array.
 function copyItems(items) {
   return items.map(function(item) {
-    var copy = new Item(item.category, item.value, item.score);
+    var copy = new Item(item.category, item.value, item.score, item.trueVal);
     copy.predicted = item.predicted;
     return copy;
   });

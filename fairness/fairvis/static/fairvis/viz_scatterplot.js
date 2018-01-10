@@ -59,7 +59,7 @@ function setup() {
 	xMap = function (d) { return xScale(xValue(d)); };
 	xAxis = d3v3.svg.axis().scale(xScale).orient("bottom");
 
-	yValue = function (d) { return d.predictions[predictionID]; };
+	yValue = function (d) { return d.scores[predictionID]; };
 	yScale = d3v3.scale.linear().range([height, 0]);
 	yMap = function (d) { return yScale(yValue(d)); };
 	yAxis = d3v3.svg.axis().scale(yScale).orient("left");
@@ -69,7 +69,7 @@ function setup() {
 	// set up fill color 
 	// TODO: change the thresholds
 	cValue = function (d) { 
-		var diff = Math.abs(d.trueVal - d.predictions[predictionID]); 
+		var diff = Math.abs(d.trueVal - d.scores[predictionID]); 
 		if (diff < 100) 
 			return "diff < 100"; 
 		else if (diff < 200) 
