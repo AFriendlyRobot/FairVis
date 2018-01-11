@@ -204,6 +204,7 @@ function histogram_main() {
 	$("#optimize-equal-threshold").click(optimizer.equalThreshold);
 	$("#optimize-equal-odds").click(optimizer.equalOdds);
 	$("#optimize-predictive-parity").click(optimizer.predictiveParity);
+	$("#optimize-equal-opportunity").click(optimizer.equalOpportunity);
 
 	// TODO
 	/*
@@ -627,6 +628,34 @@ function Optimizer(leftModel, rightModel) {
 			leftModel.notifyListeners('equalThreshold');
 			rightModel.classify(roundedThreshold(bestRight));
 			rightModel.notifyListeners('equalThreshold');
+		},
+		equalOpportunity: function() {
+			// (tp / (tp + fn)) equal between groups
+			var ls = leftStats;
+			var rs = rightStats;
+			var bestAcc = 0.0;
+			var bestLeft = 0.0;
+			var bestRight = 0.0;
+			for (var l = 0; l <= NUM_BUCKETS; l++) {
+				for (var r = 0; r <= NUM_BUCKETS; r++) {
+					var lCheck = (ls.tp[l] / (ls.tp[l] + ls.fn[l]));
+					var rCheck = (rs.tp[r] / (rs.tp[r] + rs.fn[r]));
+					if (Math.abs(lCheck - rCheck) <= ERROR_BAR) {
+						var tmpAcc = (ls.tp[l] + ls.tn[l] + rs.tp[r] + rs.tn[r]) / (ls.tp[l] + rs.tp[r] + ls.tn[l] + rs.tn[r] + ls.fp[l] + rs.fp[r] + ls.fn[l] + rs.fn[r]);
+						// console.log(l, ": ", ls.cutoff[l], "|", r, ": ", rs.cutoff[r], "|", tmpAcc);
+						if (tmpAcc >= bestAcc) {
+							bestAcc = tmpAcc;
+							bestLeft = ls.cutoff[l];
+							bestRight = rs.cutoff[r];
+						}
+					}
+				}
+			}
+
+			leftModel.classify(roundedThreshold(bestLeft));
+			leftModel.notifyListeners('equalOpportunity');
+			rightModel.classify(roundedThreshold(bestRight));
+			rightModel.notifyListeners('equalOpportunity');
 		},
 		equalOdds: function() {
 			// (fp / (fp+tn)) equal between groups, AND (fn / (tp+fn)) is equal between groups
