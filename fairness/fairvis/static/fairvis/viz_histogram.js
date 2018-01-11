@@ -11,6 +11,7 @@
 var data;
 var thresholdGlobal;
 var scalar;
+var maxBarSize;
 var barData;
 
 var leftStats;
@@ -35,7 +36,7 @@ var HISTOGRAM_LEGEND_HEIGHT = 60;
 // Histogram bucket width
 var HISTOGRAM_BUCKET_SIZE = 0.04;
 var NUM_BUCKETS = 1 / HISTOGRAM_BUCKET_SIZE;
-var BAR_WIDTH = (HISTOGRAM_WIDTH - 20) / NUM_BUCKETS;
+var BAR_WIDTH = (HISTOGRAM_WIDTH) / NUM_BUCKETS;
 
 // Padding on left; needed within SVG so annotations show up.
 var LEFT_PAD = 10;
@@ -51,8 +52,10 @@ function draw_histogram() {
 	$("#histogram1").empty();
 	$("#histogram-legend0").empty();
 	$("#histogram-legend1").empty();
+	precalculateThresholdedStatistics();
 	thresholdGlobal = 0.5;
 	scalar = null;
+	maxBarSize = 0.0;
 	barData = [[], []];
 	histogram_main(); 
 }
@@ -63,7 +66,7 @@ function histogram_initialize() {
 	var modelNames = Object.keys(data[0].scores);
 
 	// populate options for protected field selection
-	var newOpts
+	var newOpts;
 	for (var i = 0; i < colNames.length; i++) {
 		newOpt  = "<option class=\"protectedSelectOption\" value=\"";
 		newOpt += colNames[i];
@@ -74,8 +77,7 @@ function histogram_initialize() {
 	$("#protectedSelection").val(colNames[0]);
 
 	// populate options for model selector
-	// populate options for model selector
-	var newOpts
+	var newOpts;
 	for (var i = 0; i < modelNames.length; i++) {
 		newOpt  = "<option class=\"modelSelectOption\" value=\"";
 		newOpt += modelNames[i];
@@ -100,18 +102,14 @@ function histogram_initialize() {
 }
 
 function precalculateThresholdedStatistics() {
-	// var groups = makeItemsFor2Groups($("#protectedSelection").val(), $("#group1Selection").val(),
-	//	                             $("#group2Selection").val(), $("#modelSelection").val());
-
-	// var leftGroup = new GroupModel(groups[0]);
-	// var rightGroup = new GroupModel(groups[1]);
-
 	var binnedData = binnedAccuraciesByAttribute($("#protectedSelection").val(), $("#modelSelection").val(), NUM_BUCKETS);
 
 	leftStats = calcStatsForThresholds(binnedData, $("#group1Selection").val());
 	rightStats = calcStatsForThresholds(binnedData, $("#group2Selection").val());
 
-
+	// scalar = d3.scaleLinear()
+	// 		.domain([0, Math.max(leftStats.largestBin, rightStats.largestBin)])
+	// 		.range([0, HISTOGRAM_HEIGHT-50]);
 }
 
 function calcStatsForThresholds(binnedData, groupName) {
@@ -138,6 +136,8 @@ function calcStatsForThresholds(binnedData, groupName) {
 	var tp = totalPositive;
 	var fp = totalNegative;
 
+	var largestBin = 0;
+
 	statsObj["tp"].push(tp);
 	statsObj["fp"].push(fp);
 	statsObj["tn"].push(tn);
@@ -157,9 +157,14 @@ function calcStatsForThresholds(binnedData, groupName) {
 	for (var i = 0; i < NUM_BUCKETS; i++) {
 		cutoff += HISTOGRAM_BUCKET_SIZE;
 
-		// Shift from 
+		// Shift the theoretical cutoff
 		posShift = binnedData["positiveBins"][groupName][i];
 		negShift = binnedData["negativeBins"][groupName][i];
+		binTotal = posShift + negShift;
+
+		if (binTotal > largestBin) {
+			largestBin = binTotal;
+		}
 
 		tp -= posShift;
 		fn += posShift;
@@ -179,6 +184,8 @@ function calcStatsForThresholds(binnedData, groupName) {
 		statsObj["cutoff"].push(cutoff);
 	}
 
+	statsObj.largestBin = largestBin;
+
 	return statsObj;
 }
 
@@ -189,17 +196,14 @@ function histogram_main() {
 	var comparisonExample0 = new GroupModel(groups[0]);
 	var comparisonExample1 = new GroupModel(groups[1]);
 
-	// TODO: change this
-	var fairnessDef0 = new GroupModel(groups[1]);
-	var fairnessDef1 = new GroupModel(groups[1]);
-	var optimizer = Optimizer(fairnessDef0, fairnessDef1, 1); 
+	var optimizer = Optimizer(comparisonExample0, comparisonExample1); 
 
-	// to switch among definitions
-	document.getElementById('statistical-parity').onclick = optimizer.statisticalParity; 
-	document.getElementById('conditional-statistical-parity').onclick = optimizer.conditionalStatisticalParity; 
-	document.getElementById('predictive-equality').onclick = optimizer.predictiveEquality; 
-	document.getElementById('predictive-parity').onclick = optimizer.predictiveParity; 
-	document.getElementById('error-rate-balance').onclick = optimizer.errorRateBalance; 
+	// Available options: maximumAccuracy, statisticalParity, equalThreshold, equalOdds, predictiveParity
+	$("#optimize-accuracy").click(optimizer.maximumAccuracy);
+	$("#optimize-statistical-parity").click(optimizer.statisticalParity);
+	$("#optimize-equal-threshold").click(optimizer.equalThreshold);
+	$("#optimize-equal-odds").click(optimizer.equalOdds);
+	$("#optimize-predictive-parity").click(optimizer.predictiveParity);
 
 	// TODO
 	/*
@@ -235,11 +239,10 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 
 	// Icons
 	//var numBuckets = 20;
-	var SIDE = (HISTOGRAM_WIDTH - 20) / NUM_BUCKETS;
+	var SIDE = (HISTOGRAM_WIDTH) / NUM_BUCKETS;
 	var pedestalWidth = NUM_BUCKETS * SIDE;
 	var hx = (width - pedestalWidth) / 2;
-	var scale = d3.scaleLinear().range([hx, hx + pedestalWidth]).
-	domain([0, 1]);
+	var scale = d3.scaleLinear().range([hx, hx + pedestalWidth]).domain([0, 1]);
 
 	function histogramLayout(items, x, y, side, low, high, bucketSize) {
 		var buckets = [];
@@ -248,8 +251,8 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 			var bn = Math.floor((item.score - low) / bucketSize);
 			bn = Math.max(0, Math.min(maxNum, bn));
 			buckets[bn] = 1 + (buckets[bn] || 0);
-			item.x = x + side * bn;
-			item.y = y - side * buckets[bn];
+			item.x = x + (side * bn);
+			item.y = y - (side * buckets[bn]);
 			item.side = side;
 		});
 	}
@@ -295,13 +298,13 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 	
 
 	function setThreshold(t, eventFromUser) {
-		t = Math.max(0, Math.min(t, 100));
+		t = Math.max(0.0, Math.min(t, 1.0));
 		if (eventFromUser) {
 			t = HISTOGRAM_BUCKET_SIZE * Math.round(t / HISTOGRAM_BUCKET_SIZE);
 		} else {
 			tx = Math.round(scale(t));
 		}
-		tx = Math.max(0, Math.min(width - 4, tx));
+		tx = Math.max(0, Math.min(width, tx));
 		var rounded = SIDE * Math.round(tx / SIDE);
 		cutoff.attr('x', rounded);
 		var labelX = Math.max(50, Math.min(rounded, width - 70));
@@ -316,6 +319,7 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 		var oldTx = tx;
 		tx += d3.event.dx;
 		var t = scale.invert(tx);
+		t = HISTOGRAM_BUCKET_SIZE * Math.round(t / HISTOGRAM_BUCKET_SIZE);
 		thresholdGlobal = t;
 		setThreshold(t, true);
 		if (tx != oldTx) {
@@ -532,27 +536,160 @@ function createCorrectnessMatrix(id, model) {
 }
 
 
-function Optimizer(model0, model1, stepSize) {
-	// see maximizeWithConstraint()
-	function updateViz(event) {
+// Using global variables instead to allow for changes in selected protected feature values
+function Optimizer(leftModel, rightModel) {
+	var ERROR_BAR = 0.01;
 
+	function roundedThreshold(rough) {
+		return HISTOGRAM_BUCKET_SIZE * Math.round(rough / HISTOGRAM_BUCKET_SIZE);
 	}
 
 	return {
 		maximumAccuracy: function() {
 			// Simple maximization of (tp+tn)/(tp+tn+fp+fn)
+			var ls = leftStats;
+			var rs = rightStats;
+			var bestAcc = 0.0;
+			var bestLeft = 0.0;
+			var bestRight = 0.0;
+			for (var l = 0; l <= NUM_BUCKETS; l++) {
+				for (var r = 0; r <= NUM_BUCKETS; r++) {
+					var tmpAcc = (ls.tp[l] + ls.tn[l] + rs.tp[r] + rs.tn[r]) / (ls.tp[l] + rs.tp[r] + ls.tn[l] + rs.tn[r] + ls.fp[l] + rs.fp[r] + ls.fn[l] + rs.fn[r]);
+					// console.log(l, ": ", ls.cutoff[l], "|", r, ": ", rs.cutoff[r], "|", tmpAcc);
+					if (tmpAcc >= bestAcc) {
+						bestAcc = tmpAcc;
+						bestLeft = ls.cutoff[l];
+						bestRight = rs.cutoff[r];
+					}
+				}
+			}
+
+			// console.log(bestLeft, bestRight, bestAcc);
+
+			leftModel.classify(roundedThreshold(bestLeft));
+			leftModel.notifyListeners('maximumAccuracy');
+			rightModel.classify(roundedThreshold(bestRight));
+			rightModel.notifyListeners('maximumAccuracy');
 		},
 		statisticalParity: function() {
 			// ((fp + tp) / total) is equal between groups
+
+			var ls = leftStats;
+			var rs = rightStats;
+			var bestAcc = 0.0;
+			var bestLeft = 0.0;
+			var bestRight = 0.0;
+			for (var l = 0; l <= NUM_BUCKETS; l++) {
+				for (var r = 0; r <= NUM_BUCKETS; r++) {
+					var lCheck = ((ls.fp[l] + ls.tp[l]) / (ls.tp[l] + ls.fp[l] + ls.tn[l] + ls.fn[l]));
+					var rCheck = ((rs.fp[r] + rs.tp[r]) / (rs.tp[r] + rs.fp[r] + rs.tn[r] + rs.fn[r]));
+					if (Math.abs(lCheck - rCheck) <= ERROR_BAR) {
+						var tmpAcc = (ls.tp[l] + ls.tn[l] + rs.tp[r] + rs.tn[r]) / (ls.tp[l] + rs.tp[r] + ls.tn[l] + rs.tn[r] + ls.fp[l] + rs.fp[r] + ls.fn[l] + rs.fn[r]);
+						// console.log(l, ": ", ls.cutoff[l], "|", r, ": ", rs.cutoff[r], "|", tmpAcc);
+						if (tmpAcc >= bestAcc) {
+							bestAcc = tmpAcc;
+							bestLeft = ls.cutoff[l];
+							bestRight = rs.cutoff[r];
+						}
+					}
+				}
+			}
+
+			// console.log(bestLeft, bestRight, bestAcc);
+
+			leftModel.classify(roundedThreshold(bestLeft));
+			leftModel.notifyListeners('statisticalParity');
+			rightModel.classify(roundedThreshold(bestRight));
+			rightModel.notifyListeners('statisticalParity');
 		},
 		equalThreshold: function() {
 			// Thresholds simple the same
+
+			var ls = leftStats;
+			var rs = rightStats;
+			var bestAcc = 0.0;
+			var bestLeft = 0.0;
+			var bestRight = 0.0;
+			for (var i = 0; i <= NUM_BUCKETS; i++) {
+				var tmpAcc = (ls.tp[i] + ls.tn[i] + rs.tp[i] + rs.tn[i]) / (ls.tp[i] + rs.tp[i] + ls.tn[i] + rs.tn[i] + ls.fp[i] + rs.fp[i] + ls.fn[i] + rs.fn[i]);
+				// console.log(l, ": ", ls.cutoff[l], "|", r, ": ", rs.cutoff[r], "|", tmpAcc);
+				if (tmpAcc >= bestAcc) {
+					bestAcc = tmpAcc;
+					bestLeft = ls.cutoff[i];
+					bestRight = rs.cutoff[i];
+				}
+			}
+
+			// console.log(bestLeft, bestRight, bestAcc);
+
+			leftModel.classify(roundedThreshold(bestLeft));
+			leftModel.notifyListeners('equalThreshold');
+			rightModel.classify(roundedThreshold(bestRight));
+			rightModel.notifyListeners('equalThreshold');
 		},
 		equalOdds: function() {
 			// (fp / (fp+tn)) equal between groups, AND (fn / (tp+fn)) is equal between groups
+
+			var ls = leftStats;
+			var rs = rightStats;
+			var bestAcc = 0.0;
+			var bestLeft = 0.0;
+			var bestRight = 0.0;
+			for (var l = 0; l <= NUM_BUCKETS; l++) {
+				for (var r = 0; r <= NUM_BUCKETS; r++) {
+					var lCheckA = (ls.fp[l] / (ls.fp[l] + ls.tn[l]));
+					var rCheckA = (rs.fp[r] / (rs.fp[r] + rs.tn[r]));
+					var lCheckB = (ls.fn[l] / (ls.tp[l] + ls.fn[l]));
+					var rCheckB = (rs.fn[r] / (rs.tp[r] + rs.fn[r]));
+					if ((Math.abs(lCheckA - rCheckA) <= ERROR_BAR) && (Math.abs(lCheckB - rCheckB) <= ERROR_BAR)) {
+						var tmpAcc = (ls.tp[l] + ls.tn[l] + rs.tp[r] + rs.tn[r]) / (ls.tp[l] + rs.tp[r] + ls.tn[l] + rs.tn[r] + ls.fp[l] + rs.fp[r] + ls.fn[l] + rs.fn[r]);
+						// console.log(l, ": ", ls.cutoff[l], "|", r, ": ", rs.cutoff[r], "|", tmpAcc);
+						if (tmpAcc >= bestAcc) {
+							bestAcc = tmpAcc;
+							bestLeft = ls.cutoff[l];
+							bestRight = rs.cutoff[r];
+						}
+					}
+				}
+			}
+
+			// console.log(bestLeft, bestRight, bestAcc);
+
+			leftModel.classify(roundedThreshold(bestLeft));
+			leftModel.notifyListeners('equalOdds');
+			rightModel.classify(roundedThreshold(bestRight));
+			rightModel.notifyListeners('equalOdds');
 		},
 		predictiveParity: function() {
 			// (tp / (fp+tp)) equal between groups
+
+			var ls = leftStats;
+			var rs = rightStats;
+			var bestAcc = 0.0;
+			var bestLeft = 0.0;
+			var bestRight = 0.0;
+			for (var l = 0; l <= NUM_BUCKETS; l++) {
+				for (var r = 0; r <= NUM_BUCKETS; r++) {
+					var lCheck = (ls.tp[l] / (ls.tp[l] + ls.fp[l]));
+					var rCheck = (rs.tp[r] / (rs.tp[r] + rs.fp[r]));
+					if (Math.abs(lCheck - rCheck) <= ERROR_BAR) {
+						var tmpAcc = (ls.tp[l] + ls.tn[l] + rs.tp[r] + rs.tn[r]) / (ls.tp[l] + rs.tp[r] + ls.tn[l] + rs.tn[r] + ls.fp[l] + rs.fp[r] + ls.fn[l] + rs.fn[r]);
+						// console.log(l, ": ", ls.cutoff[l], "|", r, ": ", rs.cutoff[r], "|", tmpAcc);
+						if (tmpAcc >= bestAcc) {
+							bestAcc = tmpAcc;
+							bestLeft = ls.cutoff[l];
+							bestRight = rs.cutoff[r];
+						}
+					}
+				}
+			}
+
+			// console.log(bestLeft, bestRight, bestAcc);
+
+			leftModel.classify(roundedThreshold(bestLeft));
+			leftModel.notifyListeners('predictiveParity');
+			rightModel.classify(roundedThreshold(bestRight));
+			rightModel.notifyListeners('predictiveParity');
 		}
 	};
 }
@@ -722,7 +859,7 @@ function defineBar(selection) {
   	.attr('height', function(d) {return hScale(d.h); }) 
 
   	// TODO: set these
-	function xMap(index) { return index * BAR_WIDTH; }
+	function xMap(index) { return (index) * BAR_WIDTH; }
 	function yMap(index) { return HISTOGRAM_HEIGHT-hScale(index); }
 	function hScale(h) { return scalar(h); }
 }
@@ -831,9 +968,13 @@ function getBarData(items, threshold) {
 	barData[groupID] = thisBarData;
 
 	// set scalar
-	scalar = d3.scaleLinear()
-		.domain([0, Math.max.apply(Math, combinedCnt)])
-		.range([0, HISTOGRAM_HEIGHT-50]);
+	var tmpMaxBar = Math.max.apply(0, combinedCnt);
+	if (tmpMaxBar > maxBarSize) {
+		scalar = d3.scaleLinear()
+			.domain([0, Math.max.apply(0, combinedCnt)])
+			.range([0, HISTOGRAM_HEIGHT-50]);
+		maxBarSize = tmpMaxBar;
+	}
 
 	return thisBarData;
 }
