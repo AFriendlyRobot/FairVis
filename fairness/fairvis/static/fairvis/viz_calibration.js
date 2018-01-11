@@ -33,14 +33,9 @@ function calibration_initialize() {
 		$("#calibration-prediction-selection").append(newOpt);
 	}
 
-	// Populate class value selection options
-	// $("#calibration-protected-selection").change(updateCalibrationClassSelection);
-
 	// Set initial value for protected field
 	$("#calibration-protected-selection").val(json.protectedColNames[0]);
 	$("#calibration-prediction-selection").val(modelNames[0]);
-
-	// updateCalibrationClassSelection();
 
 }
 
@@ -63,7 +58,6 @@ function draw_calibration() {
 	var numBins = parseInt($("#calibration-num-bins").val());
 	var binnedData = binnedAccuraciesByAttribute(featureName, scoreName, numBins);
 	var barPoints = binnedData["pts"];  // [{ binIndex: i, cvName: obsPercent, cvName: obsPercent, . . . }, . . . ]
-	// var classOptions = Object.keys(binnedData);
 	var keys = binnedData["cvOptions"];
 
 	var cx0 = d3.scaleBand()
@@ -76,19 +70,10 @@ function draw_calibration() {
 	var cy = d3.scaleLinear()
 	           .rangeRound([cheight, 0]);
 
-	// var ccolorMap = d3.scaleLinear()
-	//                   .domain(keys)
-	//                   .range("hsl(215,100%,80%)", "hsl(215,70%,50%)")
-	//                   .interpolate(d3.interpolateHcl);
-
 	var ccolorMap = d3.scaleLinear()
 	                  .domain(keys)
 	                  .range(["hsl(215, 100%, 80%)", "hsl(215, 70%, 50%)"])
 	                  .interpolate(d3.interpolateHcl);
-
-	// var cxaxis = d3.svg.axis().scale(cx0).orient("bottom");
-
-	// var cyaxis = d3.svg.axis().scale(cy).orient("left").ticks(10);
 
 	cx0.domain(barPoints.map(function(d) { return d.binIndex }));
 	cx1.domain(keys).rangeRound([0, cx0.bandwidth()]);
@@ -253,20 +238,6 @@ function binnedAccuraciesByAttribute(featureName, scoreName, numBins) {
 
 	var retPoints = [];
 
-	// for (var ci = 0; ci < classValList.length; ci++) {
-	// 	cvName = classValList[ci];
-	// 	cvName = cvName.toString();
-
-	// 	for (var i = 0; i < positiveBins[cvName].length; i++) {
-	// 		var newPoint = {};
-	// 		newPoint["binIndex"] = i;
-	// 		newPoint["classVal"] = cvName;
-	// 		newPoint["obsPercent"] = obsPercent[cvName][i];
-
-	// 		retPoints.push(newPoint);
-	// 	}
-	// }
-
 	for (var i = 0; i < numBins; i++) {
 		var newPt = {}
 		newPt["binIndex"] = i;
@@ -280,38 +251,10 @@ function binnedAccuraciesByAttribute(featureName, scoreName, numBins) {
 		retPoints.push(newPt);
 	}
 
-	// return { "scoreBins": scoreBins, "positiveBins": positiveBins, "negativeBins": negativeBins, "counts": counts };
-	// return obsPercent;
 	var retObj = { "pts": retPoints, "cvOptions": classValList, "scoreBins": scoreBins, "positiveBins": positiveBins, "negativeBins": negativeBins, "counts": counts };
-	// console.log(retObj);
 	return retObj;
 }
 
-
-// function updateCalibrationClassSelection() {
-// 	$("#calibration-class-value-selection").empty();
-
-// 	var colName = $("#calibration-protected-selection").val();
-// 	var point;
-
-// 	options = [];
-
-// 	for (var i = 0; i < json.dataPoints.length; i++) {
-// 		point = json.dataPoints[i];
-// 		if (!options.includes(point["data"][colName])) {
-// 			options.push(point["data"][colName]);
-// 		}
-// 	}
-
-// 	for (var i = 0; i < options.length; i++) {
-// 		optName = options[i];
-// 		newOpt  = "<option class=\"calibration-class-value-option\" value=\"";
-// 		newOpt += optName + "\">" + optName + "</option>";
-// 		$("#calibration-class-value-selection").append(newOpt);
-// 	}
-
-// 	$("#calibration-class-value-selection").val(options[0]);
-// }
 
 
 

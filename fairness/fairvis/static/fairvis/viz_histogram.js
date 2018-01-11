@@ -1,5 +1,12 @@
-// Visualization JS code adapted from histogram code by Hardt et al.
-// Ref: https://research.google.com/bigpicture/attacking-discrimination-in-ml/
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
+////                                                                               ////
+//// Visualization JS code adapted from histogram code by Martin Wattenberg,       ////
+//// Fernanda Viégas, and Moritz Hardt.                                            ////
+//// Ref: https://research.google.com/bigpicture/attacking-discrimination-in-ml/   ////
+////                                                                               ////
+///////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////
 
 var data;
 var thresholdGlobal;
