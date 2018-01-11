@@ -266,7 +266,7 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 	// var axis = d3.axisBottom(scale);
     var axis = d3.axisBottom(scale);
 	svg.append('g').attr('class', 'histogram-axis')
-	.attr('transform', 'translate(0,-8)')
+	.attr("transform", "translate(10,0)")
 	.call(axis);
 	d3.select('.domain').attr('stroke-width', 1);
 
@@ -274,13 +274,14 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 		return;
 	}
 	// Sliding threshold bar.
-	var cutoff = svg.append('rect').attr('x', tx - 2).attr('y', topY - 10).
+	var cutoff = svg.append('rect').attr("transform", "translate(10,0)").attr('x', tx - 2).attr('y', topY - 10).
 	attr('width', 3).attr('height', height - topY);
 
 	var thresholdLabel = svg.append('text').text('threshold: 0.5')
 	.attr('x', tx)
 	.attr('y', 40)
-	.attr('text-anchor', 'middle').attr('class', 'bold-label');
+	.attr('text-anchor', 'middle').attr('class', 'bold-label')
+	.attr("transform", "translate(10,0)");
 
 	// ignore this part (currently not used)
 	if (includeAnnotation) {
@@ -859,7 +860,7 @@ function defineBar(selection) {
   	.attr('height', function(d) {return hScale(d.h); }) 
 
   	// TODO: set these
-	function xMap(index) { return (index) * BAR_WIDTH; }
+	function xMap(index) { return (index * BAR_WIDTH); }
 	function yMap(index) { return HISTOGRAM_HEIGHT-hScale(index); }
 	function hScale(h) { return scalar(h); }
 }
@@ -871,10 +872,10 @@ function createBars(id, items, width, height, threshold) {
 
   // initialize svg for bars
   var svg = d3.select('#' + id).append('svg')
-    .attr('width', width)
+    .attr('width', width+20)
     .attr('height', height);
 
-  var bars = svg.selectAll('.bars').data(barData).enter()
+  var bars = svg.append("g").attr("transform", "translate(10,0)").selectAll('.bars').data(barData).enter()
   	.append('rect').call(defineBar); 
 
   return svg; 
