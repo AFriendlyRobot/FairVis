@@ -282,7 +282,9 @@ function binnedAccuraciesByAttribute(featureName, scoreName, numBins) {
 
 	// return { "scoreBins": scoreBins, "positiveBins": positiveBins, "negativeBins": negativeBins, "counts": counts };
 	// return obsPercent;
-	return { "pts": retPoints, "cvOptions": classValList };
+	var retObj = { "pts": retPoints, "cvOptions": classValList, "scoreBins": scoreBins, "positiveBins": positiveBins, "negativeBins": negativeBins, "counts": counts };
+	// console.log(retObj);
+	return retObj;
 }
 
 

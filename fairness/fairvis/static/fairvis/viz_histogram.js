@@ -1,7 +1,13 @@
-var data; 
+// Visualization JS code adapted from histogram code by Hardt et al.
+// Ref: https://research.google.com/bigpicture/attacking-discrimination-in-ml/
+
+var data;
 var thresholdGlobal;
-var scalar; 
-var barData; 
+var scalar;
+var barData;
+
+var leftStats;
+var rightStats;
 
 // Side of grid in histograms and correctness matrices.
 var SIDE = 110;
@@ -82,21 +88,103 @@ function histogram_initialize() {
 		// populate the two sub selectors
 		populate_groups();
 	});
+
+	precalculateThresholdedStatistics();
+}
+
+function precalculateThresholdedStatistics() {
+	// var groups = makeItemsFor2Groups($("#protectedSelection").val(), $("#group1Selection").val(),
+	//	                             $("#group2Selection").val(), $("#modelSelection").val());
+
+	// var leftGroup = new GroupModel(groups[0]);
+	// var rightGroup = new GroupModel(groups[1]);
+
+	var binnedData = binnedAccuraciesByAttribute($("#protectedSelection").val(), $("#modelSelection").val(), NUM_BUCKETS);
+
+	leftStats = calcStatsForThresholds(binnedData, $("#group1Selection").val());
+	rightStats = calcStatsForThresholds(binnedData, $("#group2Selection").val());
+
+
+}
+
+function calcStatsForThresholds(binnedData, groupName) {
+	var statsObj = {}
+	statsObj["tp"] = [];
+	statsObj["fp"] = [];
+	statsObj["tn"] = [];
+	statsObj["fn"] = [];
+	statsObj["tpr"] = [];
+	statsObj["fpr"] = [];
+	statsObj["tnr"] = [];
+	statsObj["fnr"] = [];
+	statsObj["accuracy"] = [];
+	statsObj["cutoff"] = [];
+
+	// Initialization before walking through possible cutoffs left(low) -> right(high)
+	var cutoff = 0;
+	var fn = 0;
+	var tn = 0;
+
+	var totalPositive = binnedData["positiveBins"][groupName].reduce((prev, curr) => curr += prev);
+	var totalNegative = binnedData["negativeBins"][groupName].reduce((prev, curr) => curr += prev);
+
+	var tp = totalPositive;
+	var fp = totalNegative;
+
+	statsObj["tp"].push(tp);
+	statsObj["fp"].push(fp);
+	statsObj["tn"].push(tn);
+	statsObj["fn"].push(fn);
+	statsObj["tpr"].push(tp / (tp+fn));
+	statsObj["fpr"].push(fp / (fp+tn));
+	statsObj["tnr"].push(tn / (tn+fp));
+	statsObj["fnr"].push(fn / (tp+fn));
+	statsObj["accuracy"].push((tp+tn)/(tp+tn+fp+fn));
+	statsObj["cutoff"].push(cutoff);
+
+	var posShift;
+	var negShift;
+
+	// Including both ends, should be NUM_BUCKETS+1 possible cutoffs.
+	//     First (0) has already been pushed, so we have NUM_BUCKETS more to iterate over.
+	for (var i = 0; i < NUM_BUCKETS; i++) {
+		cutoff += HISTOGRAM_BUCKET_SIZE;
+
+		// Shift from 
+		posShift = binnedData["positiveBins"][groupName][i];
+		negShift = binnedData["negativeBins"][groupName][i];
+
+		tp -= posShift;
+		fn += posShift;
+
+		fp -= negShift;
+		tn += negShift;
+
+		statsObj["tp"].push(tp);
+		statsObj["fp"].push(fp);
+		statsObj["tn"].push(tn);
+		statsObj["fn"].push(fn);
+		statsObj["tpr"].push(tp / (tp+fn));
+		statsObj["fpr"].push(fp / (fp+tn));
+		statsObj["tnr"].push(tn / (tn+fp));
+		statsObj["fnr"].push(fn / (tp+fn));
+		statsObj["accuracy"].push((tp+tn)/(tp+tn+fp+fn));
+		statsObj["cutoff"].push(cutoff);
+	}
+
+	return statsObj;
 }
 
 function histogram_main() { 
-	var tprValue = 300;
- 	var fprValue = -700;
-
 	var groups = makeItemsFor2Groups($("#protectedSelection").val(), $("#group1Selection").val(), 
 		$("#group2Selection").val(), $("#modelSelection").val());
 
-	var comparisonExample0 = new GroupModel(groups[0], tprValue, fprValue);
-	var comparisonExample1 = new GroupModel(groups[1], tprValue, fprValue);
+	var comparisonExample0 = new GroupModel(groups[0]);
+	var comparisonExample1 = new GroupModel(groups[1]);
 
 	// TODO: change this
-	var fairnessDef0 = new GroupModel(groups[1], tprValue, fprValue);
-	var fairnessDef1 = new GroupModel(groups[1], tprValue, fprValue);
+	var fairnessDef0 = new GroupModel(groups[1]);
+	var fairnessDef1 = new GroupModel(groups[1]);
 	var optimizer = Optimizer(fairnessDef0, fairnessDef1, 1); 
 
 	// to switch among definitions
@@ -190,7 +278,6 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 		var annotationW = 200;
 		var thresholdAnnotation = null;
 		var thresholdAnnotation = svg.append('rect')
-		.attr('class', 'annotation group-unaware-annotation')
 		.attr('x', tx - annotationW / 2)
 		.attr('y', 30 - annotationPad)
 		.attr('rx', 20)
@@ -445,28 +532,20 @@ function Optimizer(model0, model1, stepSize) {
 	}
 
 	return {
+		maximumAccuracy: function() {
+			// Simple maximization of (tp+tn)/(tp+tn+fp+fn)
+		},
 		statisticalParity: function() {
-				
-			
-		}, 
-		conditionalStatisticalParity: function() {
-
-			
-		}, 
-		predictiveEquality: function() {
-			
-			
-
+			// ((fp + tp) / total) is equal between groups
+		},
+		equalThreshold: function() {
+			// Thresholds simple the same
+		},
+		equalOdds: function() {
+			// (fp / (fp+tn)) equal between groups, AND (fn / (tp+fn)) is equal between groups
 		},
 		predictiveParity: function() {
-
-			
-
-		},
-		errorRateBalance: function() {
-
-			
-
+			// (tp / (fp+tp)) equal between groups
 		}
 	};
 }
@@ -483,10 +562,8 @@ var Item = function(category, predicted, score, trueVal) {
   this.score = score;
 };
 
-var GroupModel = function(items, tprValue, fprValue) {
+var GroupModel = function(items) {
 	this.items = items; 
-	this.tprValue = tprValue;
-	this.fprValue = fprValue; 
 	this.listeners = []; 
 };
 
