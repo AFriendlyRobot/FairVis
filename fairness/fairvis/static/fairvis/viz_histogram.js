@@ -658,7 +658,7 @@ function Optimizer(leftModel, rightModel) {
 			rightModel.notifyListeners('equalOpportunity');
 		},
 		equalOdds: function() {
-			// (fp / (fp+tn)) equal between groups, AND (fn / (tp+fn)) is equal between groups
+			// (tp / (tp+fn)) equal between groups, AND (fp / (tn+fp)) is equal between groups
 
 			var ls = leftStats;
 			var rs = rightStats;
@@ -667,10 +667,10 @@ function Optimizer(leftModel, rightModel) {
 			var bestRight = 0.0;
 			for (var l = 0; l <= NUM_BUCKETS; l++) {
 				for (var r = 0; r <= NUM_BUCKETS; r++) {
-					var lCheckA = (ls.fp[l] / (ls.fp[l] + ls.tn[l]));
-					var rCheckA = (rs.fp[r] / (rs.fp[r] + rs.tn[r]));
-					var lCheckB = (ls.fn[l] / (ls.tp[l] + ls.fn[l]));
-					var rCheckB = (rs.fn[r] / (rs.tp[r] + rs.fn[r]));
+					var lCheckA = (ls.tp[l] / (ls.tp[l] + ls.fn[l]));
+					var rCheckA = (rs.tp[r] / (rs.tp[r] + rs.fn[r]));
+					var lCheckB = (ls.fp[l] / (ls.tn[l] + ls.fp[l]));
+					var rCheckB = (rs.fp[r] / (rs.tn[r] + rs.fp[r]));
 					if ((Math.abs(lCheckA - rCheckA) <= ERROR_BAR) && (Math.abs(lCheckB - rCheckB) <= ERROR_BAR)) {
 						var tmpAcc = (ls.tp[l] + ls.tn[l] + rs.tp[r] + rs.tn[r]) / (ls.tp[l] + rs.tp[r] + ls.tn[l] + rs.tn[r] + ls.fp[l] + rs.fp[r] + ls.fn[l] + rs.fn[r]);
 						// console.log(l, ": ", ls.cutoff[l], "|", r, ": ", rs.cutoff[r], "|", tmpAcc);
