@@ -1031,7 +1031,7 @@ function defineBar(selection) {
 function createBars(id, items, width, height, threshold, cvName) {
   // var barData = getBarData(items, threshold); 
 
-  var barData = getBarData(cvName, threshold);
+  var barData = getBarData(cvName, Number.parseInt(id.charAt(id.length-1)), threshold);
 
   //console.log(barData);
 
@@ -1047,7 +1047,7 @@ function createBars(id, items, width, height, threshold, cvName) {
 }
 
 // function getBarData(items, threshold) {
-function getBarData(cvName, threshold) {
+function getBarData(cvName, groupID, threshold) {
 	var thisBarData = []; 
 	var tn = [];
 	var fn = []; 
@@ -1055,7 +1055,7 @@ function getBarData(cvName, threshold) {
     var tp = []; 
     var combinedCnt = [];
     // var groupID = items[0].category;
-    var groupID = cvName.toString();
+    var groupID = groupID;
     var numNegBuckets = Math.ceil(threshold/HISTOGRAM_BUCKET_SIZE);
     var numPosBuckets = NUM_BUCKETS - numNegBuckets;
 
