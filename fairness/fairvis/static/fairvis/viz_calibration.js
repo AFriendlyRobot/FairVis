@@ -2,8 +2,8 @@ var cal_settings = {};
 var cal_data = {};
 
 
-var CAL_PLOT_WIDTH = 700;
-var CAL_PLOT_HEIGHT = 500;
+var CAL_PLOT_WIDTH = 550;
+var CAL_PLOT_HEIGHT = 400;
 
 
 function calibration_initialize() {
@@ -255,6 +255,160 @@ function binnedAccuraciesByAttribute(featureName, scoreName, numBins) {
 	return retObj;
 }
 
+
+
+function binnedAccuraciesByScore(featureName, scoreName, numBins) {
+	var points = json.dataPoints;
+	var point;
+	var outcome;
+	var score;
+	var positiveBins = {};
+	var negativeBins = {};
+	var scoreBins = {};
+	var counts = {};
+	var tup;
+	var tups = {};
+	var sortedtups;
+	var classVal;
+
+	var binWidth = 1.0 / numBins;
+
+	for (var i = 0; i < points.length; i++) {
+		point = points[i];
+		outcome = point["trueVal"];
+		score = point["scores"][scoreName];
+		classVal = point["protected"][featureName];
+		classVal = classVal.toString();
+
+		if (!(Object.keys(tups).includes(classVal))) {
+			tups[classVal] = [];
+		}
+
+		tup = [score, outcome];
+		tups[classVal].push(tup);
+	}
+
+	var classValList = Object.keys(tups);
+
+	for (var i = 0; i < classValList.length; i++) {
+		tups[classValList[i]].sort(function (left, right) {
+			return left[0] < right[0] ? -1 : 1;
+		});
+	}
+
+	var cvName;
+	var n;
+	var ctups;
+
+	for (var ci = 0; ci < classValList.length; ci++) {
+		cvName = classValList[ci];
+		cvName = cvName.toString();
+		n = tups[cvName].length;
+		ctups = tups[cvName];
+
+		positiveBins[cvName] = [];
+		negativeBins[cvName] = [];
+		counts[cvName] = [];
+		scoreBins[cvName] = [];
+
+		var lowCutoff = 0.0;
+		var highCutoff = 0.0;
+
+		for (var i = 0; i < numBins; i++) {
+			var tmpScores = [];
+			positiveBins[cvName].push(0);
+			negativeBins[cvName].push(0);
+			counts[cvName].push(0);
+
+			lowCutoff = highCutoff;
+			highCutoff += binWidth;
+			// for (var j = Math.floor(i * (n / numBins)); j < Math.floor((i+1) * (n / numBins)); j++) {
+			// 	tmpScores.push(ctups[j][0]);
+
+			// 	if (ctups[j][1] > 0) {
+			// 		positiveBins[cvName][i] += 1;
+			// 	} else {
+			// 		negativeBins[cvName][i] += 1;
+			// 	}
+
+			// 	counts[cvName][i] += 1;
+			// }
+
+			for (var j = 0; j < n; j++) {
+				if (ctups[j][0] < lowCutoff || ctups[j][0] >= highCutoff) {
+					continue;
+				} else {
+					tmpScores.push(ctups[j][0]);
+
+					if (ctups[j][1] > 0) {
+						positiveBins[cvName][i] += 1;
+					} else {
+						negativeBins[cvName][i] += 1;
+					}
+
+					counts[cvName][i] += 1;
+				}
+			}
+
+			if (tmpScores.length > 0) {
+				scoreBins[cvName].push(((tmpScores.reduce((prev, curr) => curr += prev)) / tmpScores.length));
+			} else {
+				scoreBins[cvName].push(-1);
+			}
+		}
+
+		// positiveBins[cvName].push(0);
+		// negativeBins[cvName].push(0);
+		// counts[cvName].push(0);
+		// tmpScores = [];
+
+		// for (var i = Math.floor((numBins - 1) * (n / numBins)); i < n; i++) {
+		// 	tmpScores.push(ctups[i][0]);
+
+		// 	if (ctups[i][1] > 0) {
+		// 		positiveBins[cvName][numBins - 1] += 1;
+		// 	} else {
+		// 		negativeBins[cvName][numBins - 1] += 1;
+		// 	}
+
+		// 	counts[cvName][numBins - 1] += 1;
+		// }
+
+		// scoreBins[cvName].push(((tmpScores.reduce((prev, curr) => curr += prev)) / tmpScores.length));
+	}
+
+	var obsPercent = {}
+
+	for (var ci = 0; ci < classValList.length; ci++) {
+		cvName = classValList[ci];
+		cvName = cvName.toString();
+
+		obsPercent[cvName] = [];
+
+		for (var i = 0; i < positiveBins[cvName].length; i++) {
+			var newPercent = positiveBins[cvName][i] / counts[cvName][i];
+			obsPercent[cvName].push(newPercent);
+		}
+	}
+
+	// var retPoints = [];
+
+	// for (var i = 0; i < numBins; i++) {
+	// 	var newPt = {}
+	// 	newPt["binIndex"] = i;
+	// 	for (var ci = 0; ci < classValList.length; ci++) {
+	// 		cvName = classValList[ci];
+	// 		cvName = cvName.toString();
+
+	// 		newPt[cvName] = obsPercent[cvName][i];
+	// 	}
+
+	// 	retPoints.push(newPt);
+	// }
+
+	var retObj = { "cvOptions": classValList, "scoreBins": scoreBins, "positiveBins": positiveBins, "negativeBins": negativeBins, "counts": counts };
+	return retObj;
+}
 
 
 

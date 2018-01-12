@@ -31,7 +31,7 @@ var FALSE_POSITIVE = "FP";
 var FALSE_NEGATIVE = "FN";
 
 // Component dimensions.
-var HEIGHT = 500;
+var HEIGHT = 400;
 var HISTOGRAM_HEIGHT = HEIGHT - 16;
 var HISTOGRAM_WIDTH = 370;
 var HISTOGRAM_LEGEND_HEIGHT = 60;
@@ -105,7 +105,9 @@ function histogram_initialize() {
 }
 
 function precalculateThresholdedStatistics() {
-	var binnedData = binnedAccuraciesByAttribute($("#protectedSelection").val(), $("#modelSelection").val(), NUM_BUCKETS);
+	var binnedData = binnedAccuraciesByScore($("#protectedSelection").val(), $("#modelSelection").val(), NUM_BUCKETS);
+
+	console.log(binnedData);
 
 	leftStats = calcStatsForThresholds(binnedData, $("#group1Selection").val());
 	rightStats = calcStatsForThresholds(binnedData, $("#group2Selection").val());
