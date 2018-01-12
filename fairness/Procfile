@@ -1,0 +1,2 @@
+web: gunicorn fairness.wsgi --log-file -
+
