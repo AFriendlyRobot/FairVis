@@ -67,26 +67,26 @@
   <p>(<a href="https://arxiv.org/pdf/1709.02012.pdf:">https://arxiv.org/pdf 1709.02012.pdf:</a>)</p>
   <p>&ldquo;When risk tools are used in practice, a key goal is that they are calibrated: if we look at the set of people who receive a predicted probability of p, we would like a p fraction of the members of this set to be positive instances of the classification problem [11]. Moreover, if we are concerned about fairness between two groups G1 and G2 (e.g. African-American defendants and white defendants) then we would like this calibration condition to hold simultaneously for the set of people within each of these groups as well [16]. Calibration is a crucial condition for risk tools in many settings. If a risk tool for evaluating defendants were not calibrated with respect to groups defined by race, for example, then a probability estimate of p could carry different meaning for African-American and white defendants, and hence the tool would have the unintended and highly undesirable consequence of incentivizing judges to take race into account when interpreting its predictions.</p>
   <p>Note that calibration in and of itself does not address protected attributes or differences between groups. However, it is often useful to evaluate a predictor's calibration within an individual group.&rdquo;</p>
-<img src="Calibration.png" width="460" height="345" />
+<img src="../../static/Calibration.png" width="460" height="345" />
   <p><h4>Statistical Parity:</h4></p>
   <p>&ldquo;Statistical parity is a common statistical notion of fairness which relies on prediction decisions but not true outcomes. If a predictor is operating on data with two distinct subpopulations to predict a binary outcome variable ("positive" or "negative"), it is said to exhibit statistical parity when the ratio of groups in the whole dataset is equal to the ratio of groups in the subset of data predicted to have a "positive" outcome&rdquo; [course notes]. Let&rsquo;s say we have for loan given by X and S is a subset of X with a protected feature such as race. Let D be the distribution on X. Classifier h : X-&gt;{-1,1} gives labels to X. &ldquo;When given a person x as input, h(x)=1 if x gets a loan and -1 otherwise. The bias, or statistical imparity, of h on S with respect to X,D is the following quantity. In words, it is the difference between the probability that a random individual drawn from Sis labeled 1 and the probability that a random individual from the complement S<sup>c</sup>is labeled 1.</p>
   <p style="text-indent: 5em;"><em>bias<sub>h</sub>(X,S,D) = Pr[h(x)=1|x &isin; S<sup>c</sup>] - Pr[h(x)=1|x &isin; S] </em></p>
   <p>&rdquo;(<a href="https://jeremykun.com/tag/statistics-2/">https://jeremykun.com/tag/statistics-2/</a>)</p>
   <p>Pr[h(x)=1|x belongs to S or Sc ] = FP+TP/Total (for each group)</p>
   <p>A predictor without bias satisfies statistical parity.</p>
-  <img src="StatisticalParity.png" width="460" height="345" />
+  <img src="../../static/StatisticalParity.png" width="460" height="345" />
   <p></p>
   <p><h4>Predictive Equality / Equal Opportunity :</h4></p>
   <p>(<a href="https://arxiv.org/pdf/1701.08230.pdf">https://arxiv.org/pdf/1701.08230.pdf</a>):</p>
   <p>&ldquo;Predictive equality means that the accuracy of decisions is equal across different . . . groups, as measured by false positive rate (FPR). For example, in the case of recividism prediction, this condition means that among defendants who would not have gone on to commit a violent crime if released, detention rates are equal across race groups. Formally, predictive equality means, E[d(X) | Y = 0, g(X)] = E[d(X) | Y = 0]</p>
   <p>E[d(X) | Y=0,g(X)] = FP/(FP+TN)&rdquo;</p>
-  <img src="EqualOpportunity.png" width="460" height="345" />
+  <img src="../../static/EqualOpportunity.png" width="460" height="345" />
   <p><h4>Error Rate Balance/Equal Odds:</h4></p>
   <p>Error rates between different groups are same i.e FPR of 2 groups is same and FNR of the 2 groups. FNR = FN/(FN+TP).</p>
-  <img src="EqualOdds.png" width="460" height="345" />
+  <img src="../../static/EqualOdds.png" width="460" height="345" />
   <p><h4>Predictive Parity:</h4></p>
   <p>Predictive parity states that given the predicted outcomes of a model and a certain threshold, the probability of the outcome being positive, given the ground truth above the threshold, should be the same across all groups of the population. Essentially, this refers to the true positive rate : TP/(TP+FP) which should be equal across all groups.</p>
-  <img src="PredictiveParity.png" width="460" height="345" />
+  <img src="../../static/PredictiveParity.png" width="460" height="345" />
   <p><h4>Conditional Statistical Parity:</h4></p>
   <p>The Conditional Statistical Parity introduces a condition on the Statistical Parity concept. This basically means that after a certain condition on one or more of the given protected attributes, if the predictor exhibits statistical parity, it fulfills the conditional statistical parity as well.</p>
 </div>
