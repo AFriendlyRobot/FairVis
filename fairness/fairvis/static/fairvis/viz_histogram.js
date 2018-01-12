@@ -17,6 +17,9 @@ var barData;
 var leftStats;
 var rightStats;
 
+var leftThreshold;
+var rightThreshold;
+
 // Side of grid in histograms and correctness matrices.
 var SIDE = 110;
 
@@ -315,6 +318,14 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 			thresholdAnnotation.attr('x', tx - annotationW / 2);
 		}
 		svg.selectAll('.bar').call(defineBar);
+
+		if (id == 'histogram0') {
+			leftThreshold = HISTOGRAM_BUCKET_SIZE * Math.round(t / HISTOGRAM_BUCKET_SIZE);
+		} else {
+			rightThreshold = HISTOGRAM_BUCKET_SIZE * Math.round(t / HISTOGRAM_BUCKET_SIZE);
+		}
+
+		updateTests();
 	}
 	var drag = d3.drag()
 	.on('drag', function() {
@@ -346,6 +357,89 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 
 		setThreshold(model.threshold, event == 'histogram-drag');
 	});
+}
+
+function updateTests() {
+	var l = Math.round(leftThreshold / HISTOGRAM_BUCKET_SIZE);
+	var r = Math.round(rightThreshold / HISTOGRAM_BUCKET_SIZE);
+
+	var ERROR_BAR = 0.01;
+
+	var ls = leftStats;
+	var rs = rightStats;
+
+	// Equal Thresholds
+	var is_equal_threshold = (l == r);
+
+	console.log(l, r, ls, rs);
+
+	// Statistical Parity
+	var leftCheck = ((ls.tp[l] + ls.fp[l]) / (ls.tp[l] + ls.tn[l] + ls.fp[l] + ls.fn[l]));
+	var rightCheck = ((rs.tp[r] + rs.fp[r]) / (rs.tp[r] + rs.tn[r] + rs.fp[r] + rs.fn[r]));
+
+	var tmpStat = Math.abs(leftCheck - rightCheck);
+	console.log("Statistical Parity:", tmpStat, leftCheck);
+
+	var is_stat_parity = (Math.abs(leftCheck - rightCheck) <= ERROR_BAR);
+
+	// Predictive Parity
+	var leftCheck = (ls.tp[l] / (ls.tp[l] + ls.fp[l]));
+	var rightCheck = (rs.tp[r] / (rs.tp[r] + rs.fp[r]));
+
+	var tmpStat = Math.abs(leftCheck - rightCheck);
+	console.log("Predictive Parity:", tmpStat);
+
+	var is_predictive_parity = (Math.abs(leftCheck - rightCheck) <= ERROR_BAR);
+
+	// Equal Opportunity
+	var leftCheck = (ls.tp[l] / (ls.tp[l] + ls.fn[l]));
+	var rightCheck = (rs.tp[r] / (rs.tp[r] + rs.fn[r]));
+
+	var tmpStat = Math.abs(leftCheck - rightCheck);
+	console.log("Equal Opportunity:", tmpStat);
+
+	var is_equal_opportunity = (Math.abs(leftCheck - rightCheck) <= ERROR_BAR);
+
+	// Equal Odds
+	var leftCheckA = (ls.tp[l] / (ls.tp[l] + ls.fn[l]));
+	var leftCheckB = (ls.fp[l] / (ls.tn[l] + ls.fp[l]));
+	var rightCheckA = (rs.tp[r] / (rs.tp[r] + rs.fn[r]));
+	var rightCheckB = (rs.fp[r] / (rs.tn[r] + rs.fp[r]));
+
+	var tmpStatA = Math.abs(leftCheckA - rightCheckA);
+	var tmpStatB = Math.abs(leftCheckB - rightCheckB);
+	console.log("Equal Odds:", tmpStatA, tmpStatB);
+
+	var is_equal_odds = ((Math.abs(leftCheckA - rightCheckA) <= ERROR_BAR) && (Math.abs(leftCheckB - rightCheckB) <= ERROR_BAR));
+
+	// Update Button Classes
+	cleanConstraintButtons();
+
+	styleConstraintButton("#optimize-equal-threshold", is_equal_threshold);
+	styleConstraintButton("#optimize-statistical-parity", is_stat_parity);
+	styleConstraintButton("#optimize-predictive-parity", is_predictive_parity);
+	styleConstraintButton("#optimize-equal-opportunity", is_equal_opportunity);
+	styleConstraintButton("#optimize-equal-odds", is_equal_odds);
+}
+
+function cleanConstraintButtons() {
+	cleanButton("#optimize-equal-threshold");
+	cleanButton("#optimize-statistical-parity");
+	cleanButton("#optimize-predictive-parity");
+	cleanButton("#optimize-equal-opportunity");
+	cleanButton("#optimize-equal-odds");
+}
+
+function cleanButton(id) {
+	$(id).removeClass("btn-danger").removeClass("btn-success");
+}
+
+function styleConstraintButton(id, constraint) {
+	if (constraint) {
+		$(id).addClass("btn-success");
+	} else {
+		$(id).addClass("btn-danger");
+	}
 }
 
 function createHistogramLegend(id, category) {
