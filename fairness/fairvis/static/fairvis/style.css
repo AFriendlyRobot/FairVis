@@ -69,6 +69,10 @@ input[type=file] {}
 	margin-left: 10px;
 }
 
+#histogram-description {
+	text-align: center;
+}
+
 
 /*******************************************/
 /*                  Viz                    */
