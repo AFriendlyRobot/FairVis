@@ -170,7 +170,17 @@
 <div id="calibration" class="tabcontent">
     <h3>Evaluation of Calibration</h3>
     <p style = "font-size: 16px;">
-    Instructions: 
+    Instructions: <br>
+    1. Use the drop-down menus to select the desired protected field,  and the prediction model/scores. <br>
+    2. Select the number of bins (>=2) to see how calibrated the data is. Each bin size is 100/nbrOfBins % <br>
+    3. Click on the Analyze Calibration method to see the Calibration stats. <br>
+    4. Experiment with the number of bins and scoring method to see how calibration changes. <br>
+    <br />
+    X axis shows bin number<br/>
+    Y axis shows the percentage of data points for each group in the bin when target = 1
+
+  </p><br><br>
+ 
 
     </p><br><br>
     <table id="calibration-controls-table">
