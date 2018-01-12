@@ -71,20 +71,20 @@ calibration is not a property of the thresholds set on a prediction score, we do
 <img src="../../static/Calibration.png" width="460" height="345" />
   <p><h4>Statistical Parity:</h4></p>
   <p>Statistical parity is a relatively common definition from statistical analysis, examining rates of predicted POSITIVE samples from different groups. Statistical parity does not take into account accuracies of these predictions, simply the portions of individuals predicted to be part of the POSITIVE class.</p>
-  <p style="text-indent: 5em;"> STATISTICAL PARITY &rarr; TP+FP<over>(TP+TN+FP+FN) </p>
+  <p style="text-indent: 5em;"> STATISTICAL PARITY &rarr; <MATH>TP+FP<over>(TP+TN+FP+FN) </MATH></p>
   <img src="../../static/StatisticalParity.png" width="460" height="345" />
   <p></p>
   <p><h4>Predictive Equality / Equal Opportunity :</h4></p>
   <p>Predictive equality or Equal opportunity is equivalent to an equal true positive rate across the groups being compared</p>
-  <p style="text-indent: 5em;"> EQUAL OPPORTUNITY &rarr; TP<over>(TP+FN) </p>
+  <p style="text-indent: 5em;"> EQUAL OPPORTUNITY &rarr; <MATH> TP<over>(TP+FN)</MATH> </p>
   <img src="../../static/EqualOpportunity.png" width="460" height="345" />
   <p><h4>Error Rate Balance/Equal Odds:</h4></p>
   <p>Equalized odds is a further constraint added to equal opportunity. Under equalized odds, both the true positive rate and false positive rate must be equal across groups that are being compared.</p>
-  <p style="text-indent: 5em;"> EQUALIZED ODDS &rarr; TP<over>(TP+FN) AND FP<over>(TN+FP) </p>
+  <p style="text-indent: 5em;"> EQUALIZED ODDS &rarr; <MATH>TP<over>(TP+FN)</MATH> AND <MATH>FP<over>(TN+FP)</MATH> </p>
   <img src="../../static/EqualOdds.png" width="460" height="345" />
   <p><h4>Predictive Parity:</h4></p>
   <p>Predictive parity looks at correct predictions of membership in the POSITIVE class. Under a predictor that satisfies predictive parity, an individual that is predicted to be a member of the POSITIVE class is equally likely to be a correct prediction regardless of group membership.</p>
-  <p style="text-indent: 5em;"> PREDICTIVE PARITY &rarr; TP<over>(TP+FP) </p>
+  <p style="text-indent: 5em;"> PREDICTIVE PARITY &rarr; <MATH>TP<over>(TP+FP)</MATH> </p>
   <img src="../../static/PredictiveParity.png" width="460" height="345" />
 </div>
 
