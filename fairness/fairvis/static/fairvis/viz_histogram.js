@@ -9,9 +9,10 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 var data;
+var binnedData;
 var thresholdGlobal;
 var scalar;
-var maxBarSize;
+var maxBarSize = 0.0;
 var barData;
 
 var leftStats;
@@ -56,10 +57,10 @@ function draw_histogram() {
 	$("#histogram1").empty();
 	$("#histogram-legend0").empty();
 	$("#histogram-legend1").empty();
-	precalculateThresholdedStatistics();
-	thresholdGlobal = 0.5;
 	scalar = null;
 	maxBarSize = 0.0;
+	precalculateThresholdedStatistics();
+	thresholdGlobal = 0.5;
 	barData = [[], []];
 	histogram_main(); 
 }
@@ -122,9 +123,7 @@ function validateGroupDifference() {
 }
 
 function precalculateThresholdedStatistics() {
-	var binnedData = binnedAccuraciesByScore($("#protectedSelection").val(), $("#modelSelection").val(), NUM_BUCKETS);
-
-	console.log(binnedData);
+	binnedData = binnedAccuraciesByScore($("#protectedSelection").val(), $("#modelSelection").val(), NUM_BUCKETS);
 
 	leftStats = calcStatsForThresholds(binnedData, $("#group1Selection").val());
 	rightStats = calcStatsForThresholds(binnedData, $("#group2Selection").val());
@@ -183,6 +182,13 @@ function calcStatsForThresholds(binnedData, groupName) {
 		posShift = binnedData["positiveBins"][groupName][i];
 		negShift = binnedData["negativeBins"][groupName][i];
 		binTotal = posShift + negShift;
+
+		if (binTotal > maxBarSize) {
+			maxBarSize = binTotal;
+			scalar = d3.scaleLinear()
+			           .domain([0, binTotal])
+			           .range([0, HISTOGRAM_HEIGHT-50]);
+		}
 
 		if (binTotal > largestBin) {
 			largestBin = binTotal;
@@ -243,8 +249,8 @@ function histogram_main() {
 	rightThreshold = 0.5;
 
 	// make histograms & legends
-	createHistogram('histogram0', comparisonExample0, false, false);
-	createHistogram('histogram1', comparisonExample1, false, false);
+	createHistogram('histogram0', comparisonExample0, false, false, $("#group1Selection").val());
+	createHistogram('histogram1', comparisonExample1, false, false, $("#group2Selection").val());
 	createHistogramLegend('histogram-legend0', 0);
 	createHistogramLegend('histogram-legend1', 1);
 
@@ -255,7 +261,7 @@ function histogram_main() {
 	comparisonExample1.notifyListeners();
 }
 
-function createHistogram(id, model, noThreshold, includeAnnotation) {
+function createHistogram(id, model, noThreshold, includeAnnotation, cvName) {
 	var width = HISTOGRAM_WIDTH;
 	var height = HEIGHT;
 	var bottom = height - 16;
@@ -285,7 +291,7 @@ function createHistogram(id, model, noThreshold, includeAnnotation) {
 
 	histogramLayout(items, hx, bottom, SIDE, 0.0, 1.0, HISTOGRAM_BUCKET_SIZE);
 	//var svg = createIcons(id, items, width, height);
-	var svg = createBars(id, items, width, height, thresholdGlobal);
+	var svg = createBars(id, items, width, height, thresholdGlobal, cvName);
 
 	var tx = width / 2;
 	var topY = 60;
@@ -1001,7 +1007,7 @@ var Bar = function(group, predicted, trueVal, score, count, x, y) {
 	this.w = BAR_WIDTH; 
 	this.h = count;
 	this.x = x; 
-	this.y = y; 
+	this.y = y;
 }
 
 function defineBar(selection) {
@@ -1014,7 +1020,7 @@ function defineBar(selection) {
   	.attr('x', function(d) { return xMap(d.x); })
   	.attr('y', function(d) { return yMap(d.y); })
   	.attr('width', function(d) { return d.w; })
-  	.attr('height', function(d) {return hScale(d.h); }) 
+  	.attr('height', function(d) { return hScale(d.h); }) 
 
   	// TODO: set these
 	function xMap(index) { return (index * BAR_WIDTH); }
@@ -1022,8 +1028,10 @@ function defineBar(selection) {
 	function hScale(h) { return scalar(h); }
 }
 
-function createBars(id, items, width, height, threshold) {
-  var barData = getBarData(items, threshold); 
+function createBars(id, items, width, height, threshold, cvName) {
+  // var barData = getBarData(items, threshold); 
+
+  var barData = getBarData(cvName, threshold);
 
   //console.log(barData);
 
@@ -1038,16 +1046,20 @@ function createBars(id, items, width, height, threshold) {
   return svg; 
 }
 
-function getBarData(items, threshold) {
+// function getBarData(items, threshold) {
+function getBarData(cvName, threshold) {
 	var thisBarData = []; 
 	var tn = [];
 	var fn = []; 
 	var fp = []; 
     var tp = []; 
     var combinedCnt = [];
-    var groupID = items[0].category;
+    // var groupID = items[0].category;
+    var groupID = cvName.toString();
     var numNegBuckets = Math.ceil(threshold/HISTOGRAM_BUCKET_SIZE);
     var numPosBuckets = NUM_BUCKETS - numNegBuckets;
+
+
 
 	// initialize 2 negative arrays 
 	for (var i = 0; i < numNegBuckets; ++i) {
@@ -1062,34 +1074,50 @@ function getBarData(items, threshold) {
 		combinedCnt.push(0);
 	}
 
-	items.forEach(function(d) {
-  	// check left/right to threshold 
-	  	var index = Math.floor(d.score/HISTOGRAM_BUCKET_SIZE); 
-	  	if (index >= NUM_BUCKETS)
-	  		index = NUM_BUCKETS-1;
-	  	else if (index < 0)
-	  		index = 0;
-	  	//console.log(index);
-	  	++combinedCnt[index];
-	  	if (d.score < threshold) {
-			// check negative/positive
-			if (d.trueVal == POSITIVE) {
-				// false negative
-				++fn[index];
-			} else if (d.trueVal == NEGATIVE) {
-				++tn[index];
-			} else { console.log("error"); }
-		} else {
-			// check negative/positive
-			if (d.trueVal == POSITIVE) {
-				// true positive 
-				++tp[index-numNegBuckets]; 
-			} else if (d.trueVal == NEGATIVE) {
-				// false positive
-				++fp[index-numNegBuckets];
-			} else { console.log("error"); }
-		}
-	});
+	// if (items[0].category.toString() == "0") {
+	// 	console.log(items.length);
+	// }
+
+	// items.forEach(function(d) {
+ //  	// check left/right to threshold 
+	//   	var index = Math.floor(d.score/HISTOGRAM_BUCKET_SIZE); 
+	//   	if (index >= NUM_BUCKETS)
+	//   		index = NUM_BUCKETS-1;
+	//   	else if (index < 0)
+	//   		index = 0;
+	//   	//console.log(index);
+	//   	++combinedCnt[index];
+	//   	if (d.score < threshold) {
+	// 		// check negative/positive
+	// 		if (d.trueVal == POSITIVE) {
+	// 			// false negative
+	// 			++fn[index];
+	// 		} else if (d.trueVal == NEGATIVE) {
+	// 			++tn[index];
+	// 		} else { console.log("error"); }
+	// 	} else {
+	// 		// check negative/positive
+	// 		if (d.trueVal == POSITIVE) {
+	// 			// true positive 
+	// 			++tp[index-numNegBuckets]; 
+	// 		} else if (d.trueVal == NEGATIVE) {
+	// 			// false positive
+	// 			++fp[index-numNegBuckets];
+	// 		} else { console.log("error"); }
+	// 	}
+	// });
+
+	for (var i = 0; i < tn.length; i++) {
+		tn[i] = binnedData.negativeBins[cvName][i];
+		fn[i] = binnedData.positiveBins[cvName][i];
+		combinedCnt[i] = tn[i] + fn[i];
+	}
+
+	for (var i = 0; i < tp.length; i++) {
+		tp[i] = binnedData.positiveBins[cvName][i+tn.length];
+		fp[i] = binnedData.negativeBins[cvName][i+tn.length];
+		combinedCnt[i+tn.length] = tp[i] + fp[i];
+	}
 
 	// push negatives in barData
 	for (var i = 0; i < tn.length; ++i) {
@@ -1122,17 +1150,18 @@ function getBarData(items, threshold) {
 		}
 	}
 
+
 	// update barData
 	barData[groupID] = thisBarData;
 
 	// set scalar
-	var tmpMaxBar = Math.max.apply(0, combinedCnt);
-	if (tmpMaxBar > maxBarSize) {
-		scalar = d3.scaleLinear()
-			.domain([0, Math.max.apply(0, combinedCnt)])
-			.range([0, HISTOGRAM_HEIGHT-50]);
-		maxBarSize = tmpMaxBar;
-	}
+	// var tmpMaxBar = Math.max.apply(0, combinedCnt);
+	// if (tmpMaxBar > maxBarSize) {
+	// 	scalar = d3.scaleLinear()
+	// 		.domain([0, Math.max.apply(0, combinedCnt)])
+	// 		.range([0, HISTOGRAM_HEIGHT-50]);
+	// 	maxBarSize = tmpMaxBar;
+	// }
 
 	return thisBarData;
 }
