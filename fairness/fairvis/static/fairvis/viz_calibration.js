@@ -2,8 +2,8 @@ var cal_settings = {};
 var cal_data = {};
 
 
-var CAL_PLOT_WIDTH = 550;
-var CAL_PLOT_HEIGHT = 400;
+var CAL_PLOT_WIDTH = 650;
+var CAL_PLOT_HEIGHT = 500;
 
 
 function calibration_initialize() {
@@ -45,7 +45,7 @@ function calibration_initialize() {
 function draw_calibration() {
 	$("#calibration-svg").empty();
 	var cal_svg = d3.select("#calibration-svg"),
-		cmargin = { top: 20, right: 20, bottom: 30, left: 40 },
+		cmargin = { top: 20, right: 50, bottom: 30, left: 40 },
 		cwidth = CAL_PLOT_WIDTH - cmargin.left - cmargin.right,
 		cheight = CAL_PLOT_HEIGHT - cmargin.top - cmargin.bottom,
 		g = cal_svg.append("g").attr("transform", "translate(" + cmargin.left + "," + cmargin.top + ")");
@@ -116,13 +116,13 @@ function draw_calibration() {
 	              .attr("transform", function(d,i) { return "translate(0," + i * 20 + ")"; });
 
 	legend.append("rect")
-	      .attr("x", cwidth-19)
+	      .attr("x", cwidth+50-19)
 	      .attr("width", 19)
 	      .attr("height", 19)
 	      .attr("fill", ccolorMap);
 
 	legend.append("text")
-	      .attr("x", cwidth - 24)
+	      .attr("x", cwidth+50 - 24)
 	      .attr("y", 9.5)
 	      .attr("dy", "0.32em")
 	      .text(function(d) { return d; });
