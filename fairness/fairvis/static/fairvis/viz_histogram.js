@@ -50,6 +50,7 @@ var PIE_COLORS = [['#686868', '#ccc','#039', '#92a5ce'],
                   ['#686868', '#ccc','#c70',  '#f0d6b3']];
 
 
+
 function draw_histogram() {
 	$("#histogram0").empty();
 	$("#histogram1").empty();
@@ -101,7 +102,23 @@ function histogram_initialize() {
 		populate_groups();
 	});
 
+	$("#group1Selection").on("change", function() {
+		validateGroupDifference();
+	});
+
+	$("#group2Selection").on("change", function() {
+		validateGroupDifference();
+	});
+
 	precalculateThresholdedStatistics();
+}
+
+function validateGroupDifference() {
+	if ($("#group1Selection").val() == $("#group2Selection").val()) {
+		$("#start-hist-button").attr("disabled", true);
+	} else {
+		$("#start-hist-button").removeAttr("disabled");
+	}
 }
 
 function precalculateThresholdedStatistics() {
