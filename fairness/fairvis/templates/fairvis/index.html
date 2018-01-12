@@ -63,28 +63,32 @@
 <!-- Tab content -->
 <div id="fairdef" class="tabcontent">
   <h3>Fairness definitions</h3>
+  <p><h4>Accuracy:</h4></p>
+  <h5><p>As a base comparison, we provide the option of optimizing for accuracy without any fairness constraint. This functionality can act as a control when examining fairness definition constraints.</p>
+  <p style="text-indent: 5em;"> ACCURACY &rarr; TP+TN/(TP+TN+FP+FN) </p></h5>
   <p><h4>Equal Thresholds:</h4></p>
+  <h5><p>Equal thresholds is a similar baseline comparison. No further constraint is applied to the optimization beyond setting thresholds for both groups being examined to be equal. Essentially, this can be viewed as maximizing accuracy while ignoring group membership,2 as such an optimization could only produce a single threshold</p></h5>
   <p><h4>Calibration :</h4></p>
   <h5><p>Given a binary classification learner that outputs scores, the learner’s predictions are said to be calibrated if and only if the predicted score for any individual is roughly equivalent to the probability that the true value of the individual’s class is POSITIVE.</p>
   <p>Calibration is a somewhat more complicated notion of fairness for predictors. Because
 calibration is not a property of the thresholds set on a prediction score, we do not use calibration as a possible constraint for optimization. Instead, we devote a separate visualization to examining calibration of prediction scores</p></h5>
 <img src="../../static/Calibration.png" width="460" height="345" />
   <p><h4>Statistical Parity:</h4></p>
-  <p><h5>Statistical parity is a relatively common definition from statistical analysis, examining rates of predicted POSITIVE samples from different groups. Statistical parity does not take into account accuracies of these predictions, simply the portions of individuals predicted to be part of the POSITIVE class.</h5></p>
-  <p style="text-indent: 5em;"> STATISTICAL PARITY &rarr; TP+FP/(TP+TN+FP+FN) </p>
+  <h5><p>Statistical parity is a relatively common definition from statistical analysis, examining rates of predicted POSITIVE samples from different groups. Statistical parity does not take into account accuracies of these predictions, simply the portions of individuals predicted to be part of the POSITIVE class.</p>
+  <p style="text-indent: 5em;"> STATISTICAL PARITY &rarr; TP+FP/(TP+TN+FP+FN) </p></h5>
   <img src="../../static/StatisticalParity.png" width="460" height="345" />
   <p></p>
   <p><h4>Predictive Equality / Equal Opportunity :</h4></p>
-  <p><h5>Predictive equality or Equal opportunity is equivalent to an equal true positive rate across the groups being compared.</h5></p>
-  <p style="text-indent: 5em;"> EQUAL OPPORTUNITY &rarr; TP/(TP+FN) </p>
+  <h5><p>Predictive equality or Equal opportunity is equivalent to an equal true positive rate across the groups being compared.</p>
+  <p style="text-indent: 5em;"> EQUAL OPPORTUNITY &rarr; TP/(TP+FN) </p></h5>
   <img src="../../static/EqualOpportunity.png" width="460" height="345" />
   <p><h4>Error Rate Balance/Equal Odds:</h4></p>
-  <p><h5>Equalized odds is a further constraint added to equal opportunity. Under equalized odds, both the true positive rate and false positive rate must be equal across groups that are being compared.</h5></p>
-  <p style="text-indent: 5em;"> EQUALIZED ODDS &rarr; TP/(TP+FN) AND FP/(TN+FP) </p>
+  <h5><p>Equalized odds is a further constraint added to equal opportunity. Under equalized odds, both the true positive rate and false positive rate must be equal across groups that are being compared.</p>
+  <p style="text-indent: 5em;"> EQUALIZED ODDS &rarr; TP/(TP+FN) AND FP/(TN+FP) </p></h5>
   <img src="../../static/EqualOdds.png" width="460" height="345" />
   <p><h4>Predictive Parity:</h4></p>
-  <p><h5>Predictive parity looks at correct predictions of membership in the POSITIVE class. Under a predictor that satisfies predictive parity, an individual that is predicted to be a member of the POSITIVE class is equally likely to be a correct prediction regardless of group membership.</h5></p>
-  <p style="text-indent: 5em;"> PREDICTIVE PARITY &rarr; TP/(TP+FP) </p>
+  <h5><p>Predictive parity looks at correct predictions of membership in the POSITIVE class. Under a predictor that satisfies predictive parity, an individual that is predicted to be a member of the POSITIVE class is equally likely to be a correct prediction regardless of group membership.</p>
+  <p style="text-indent: 5em;"> PREDICTIVE PARITY &rarr; TP/(TP+FP) </p></h5>
   <img src="../../static/PredictiveParity.png" width="460" height="345" />
 </div>
 
