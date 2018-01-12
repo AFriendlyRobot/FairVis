@@ -220,6 +220,9 @@ function histogram_main() {
 	createRatePies('pies1', comparisonExample1, PIE_COLORS[1], true);
 	*/
 
+	leftThreshold = 0.5;
+	rightThreshold = 0.5;
+
 	// make histograms & legends
 	createHistogram('histogram0', comparisonExample0, false, false);
 	createHistogram('histogram1', comparisonExample1, false, false);
@@ -371,14 +374,9 @@ function updateTests() {
 	// Equal Thresholds
 	var is_equal_threshold = (l == r);
 
-	console.log(l, r, ls, rs);
-
 	// Statistical Parity
 	var leftCheck = ((ls.tp[l] + ls.fp[l]) / (ls.tp[l] + ls.tn[l] + ls.fp[l] + ls.fn[l]));
 	var rightCheck = ((rs.tp[r] + rs.fp[r]) / (rs.tp[r] + rs.tn[r] + rs.fp[r] + rs.fn[r]));
-
-	var tmpStat = Math.abs(leftCheck - rightCheck);
-	console.log("Statistical Parity:", tmpStat, leftCheck);
 
 	var is_stat_parity = (Math.abs(leftCheck - rightCheck) <= ERROR_BAR);
 
@@ -386,17 +384,11 @@ function updateTests() {
 	var leftCheck = (ls.tp[l] / (ls.tp[l] + ls.fp[l]));
 	var rightCheck = (rs.tp[r] / (rs.tp[r] + rs.fp[r]));
 
-	var tmpStat = Math.abs(leftCheck - rightCheck);
-	console.log("Predictive Parity:", tmpStat);
-
 	var is_predictive_parity = (Math.abs(leftCheck - rightCheck) <= ERROR_BAR);
 
 	// Equal Opportunity
 	var leftCheck = (ls.tp[l] / (ls.tp[l] + ls.fn[l]));
 	var rightCheck = (rs.tp[r] / (rs.tp[r] + rs.fn[r]));
-
-	var tmpStat = Math.abs(leftCheck - rightCheck);
-	console.log("Equal Opportunity:", tmpStat);
 
 	var is_equal_opportunity = (Math.abs(leftCheck - rightCheck) <= ERROR_BAR);
 
@@ -405,10 +397,6 @@ function updateTests() {
 	var leftCheckB = (ls.fp[l] / (ls.tn[l] + ls.fp[l]));
 	var rightCheckA = (rs.tp[r] / (rs.tp[r] + rs.fn[r]));
 	var rightCheckB = (rs.fp[r] / (rs.tn[r] + rs.fp[r]));
-
-	var tmpStatA = Math.abs(leftCheckA - rightCheckA);
-	var tmpStatB = Math.abs(leftCheckB - rightCheckB);
-	console.log("Equal Odds:", tmpStatA, tmpStatB);
 
 	var is_equal_odds = ((Math.abs(leftCheckA - rightCheckA) <= ERROR_BAR) && (Math.abs(leftCheckB - rightCheckB) <= ERROR_BAR));
 
@@ -420,6 +408,8 @@ function updateTests() {
 	styleConstraintButton("#optimize-predictive-parity", is_predictive_parity);
 	styleConstraintButton("#optimize-equal-opportunity", is_equal_opportunity);
 	styleConstraintButton("#optimize-equal-odds", is_equal_odds);
+
+	displayStatValues(l, r);
 }
 
 function cleanConstraintButtons() {
@@ -440,6 +430,31 @@ function styleConstraintButton(id, constraint) {
 	} else {
 		$(id).addClass("btn-danger");
 	}
+}
+
+function displayStatValues(l, r) {
+	var ltp = leftStats.tp[l];
+	var ltn = leftStats.tn[l];
+	var lfp = leftStats.fp[l];
+	var lfn = leftStats.fn[l];
+
+	var rtp = rightStats.tp[r];
+	var rtn = rightStats.tn[r];
+	var rfp = rightStats.fp[r];
+	var rfn = rightStats.fn[r];
+
+	$("#histogram-stats0").html(formatStats(ltp, ltn, lfp, lfn));
+	$("#left-group-acc-container").html("ACCURACY: " + ((ltp + ltn) / (ltp + ltn + lfp + lfn)).toFixed(2).toString());
+	$("#histogram-stats1").html(formatStats(rtp, rtn, rfp, rfn));
+	$("#right-group-acc-container").html("ACCURACY: " + ((rtp + rtn) / (rtp + rtn + rfp + rfn)).toFixed(2).toString());
+}
+
+function formatStats(tp, tn, fp, fn) {
+	hString  = "<div class=\"left-stat-container\"><div class=\"tn-stat\">TN: " + tn.toString() + "</div><br />";
+	hString += "<div class=\"fn-stat\">FN: " + fn.toString() + "</div></div>";
+	hString += "<div class=\"right-stat-container\"><div class=\"fp-stat\">FP: " + fp.toString() + "</div><br />";
+	hString += "<div class=\"tp-stat\">TP: " + tp.toString() + "</div></div>";
+	return hString;
 }
 
 function createHistogramLegend(id, category) {

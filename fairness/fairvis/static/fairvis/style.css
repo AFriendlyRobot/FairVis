@@ -49,6 +49,26 @@ body {
 input[type=file] {}
 
 
+.big-label {
+	text-align: center;
+	margin-bottom: 10px;
+}
+
+.histogram-stats {
+	position: relative;
+	text-align: center;
+}
+
+.left-stat-container {
+	display: inline-block;
+	margin-right: 10px;
+}
+
+.right-stat-container {
+	display: inline-block;
+	margin-left: 10px;
+}
+
 
 /*******************************************/
 /*                  Viz                    */

@@ -96,14 +96,14 @@
                 Protected Field: <select id="protectedSelection" class="selectpicker"></select>
                 <br><br>
                 Group 1: <select id="group1Selection" class="selectpicker"></select>
-                <br>
+                <br><br>
                 Group 2: <select id="group2Selection" class="selectpicker"></select>
                 <br><br>
                 Model: <select id="modelSelection" class="selectpicker"></select>
                 <br><br>
-                <button class="btn btn-primary visualize_histogram btn-hist" onclick="draw_histogram()">Visualize/Reset</button>
+                <button class="btn btn-primary visualize_histogram hist-btn" onclick="draw_histogram()">Visualize/Reset</button>
 
-                <p><p><br><br>
+                <br><br>
 
                 <button class="demo btn btn-default hist-btn" id="optimize-accuracy">Accuracy</button>
                 <br />
@@ -129,29 +129,23 @@
     </tr>
     <tr>
       <td valign="top">
-        <div class="big-label">Group 1</div>
-        <br><br>
+        <div class="big-label">Group 1<p id="left-group-acc-container"></p></div>
         <div id="histogram0"></div>
         <div id="histogram-legend0" class="histogram-legend"></div>
+        <div id="histogram-stats0" class="histogram-stats"></div>
       </td>
       <td width=20>&nbsp;</td>
       <td valign="top">
-        <!-- start upper right content label -->
-        <div class="big-label" style="margin-left:10px">Group 2</div>
-        <!-- end upper right content label -->
-        <br><br>
-        <!-- start upper right content -->
+        <div class="big-label">Group 2<p id="right-group-acc-container"></p></div>
         <div id="histogram1"></div>
         <div id="histogram-legend1" class="histogram-legend"></div>
-        <!-- end upper right content -->
+        <div id="histogram-stats1" class="histogram-stats"></div>
       </td>
     </tr>
     <tr>
       <td>
-        <!-- start lower left content -->
         <div id="correct0"></div>
         <div id="pies0"></div>
-        <!-- end lower left content-->
       </td>
       <td width=20>&nbsp;</td>
       <td valign="top">
