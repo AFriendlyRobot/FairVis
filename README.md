@@ -29,8 +29,3 @@ Two sets of sample files are found in the testfiles directory. Both sets were ge
 ```partially_calibrated_*``` files contain one protected field with three values. Scores generated for two of the values are calibrated, while scores for the final (larger) group were generated uniformly at random.
 
 ```well_calibrated_*``` files also contain a single protected field with three values, but scores for all values of the protected attribute are calibrated.
-
-
-## Deployment
-
-A running deployment of FairVis can be found at http://fairviz.herokuapp.com/
