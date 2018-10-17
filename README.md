@@ -30,3 +30,7 @@ Two sets of sample files are found in the testfiles directory. Both sets were ge
 
 ```well_calibrated_*``` files also contain a single protected field with three values, but scores for all values of the protected attribute are calibrated.
 
+
+## Deployment
+
+A running deployment of FairVis can be found at http://fairviz.herokuapp.com/
